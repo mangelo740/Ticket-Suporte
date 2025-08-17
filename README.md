@@ -1,170 +1,100 @@
-# Sistema de Abertura de Chamados - Vanilla JavaScript
+# Sistema de Abertura de Chamados
 
-Sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript puro com simulação de banco SQLite usando localStorage.
+Um sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript com simulação de banco SQLite usando localStorage.
 
-## 🚀 Funcionalidades
+## ✨ Características
 
-### 📋 Sistema de Tickets
 - Formulário completo para abertura de chamados
-- Upload de múltiplos arquivos (imagens, documentos)
-- Preview de imagens
-- Validação de campos obrigatórios
-- Armazenamento local simulando SQLite
+- Painel administrativo com dashboard
+- Gestão de tickets com filtros e pesquisa
+- Upload de múltiplos arquivos com preview
+- Notas de acompanhamento nos chamados
+- Responsivo para desktop e mobile
 
-### 🔧 Painel Administrativo
-- **Dashboard:** Visão geral com estatísticas em tempo real
-- **Gerenciamento:** Lista completa de tickets com filtros
-- **Detalhes:** Visualização completa de cada ticket
-- **Edição:** Alteração de status e prioridade
-- **Notas:** Sistema de acompanhamento
-- **Download:** Arquivos anexados
-- **Exclusão:** Remoção de tickets
+## 🚀 Como usar
 
-## 📁 Estrutura de Arquivos
+### Instalação
 
-```
-ticket-system-vanilla/
-├── index.html          # Página principal - formulário de tickets
-├── admin.html          # Painel administrativo
-├── styles.css          # Estilos CSS responsivos
-├── script.js           # JavaScript do formulário
-├── admin.js            # JavaScript do painel admin
-├── database.js         # Simulação SQLite com localStorage
-└── README.md           # Documentação
+```bash
+# Clonar o repositório
+git clone https://github.com/seu-usuario/sistema-tickets.git
+cd sistema-tickets
+
+# Instalar dependências
+npm install
 ```
 
-## 🛠️ Tecnologias Utilizadas
+### Execução
 
-- **HTML5:** Estrutura semântica
-- **CSS3:** Estilos modernos e responsivos
-- **JavaScript ES6+:** Funcionalidades interativas
-- **LocalStorage:** Simulação de banco SQLite
-- **Font Awesome:** Ícones
+```bash
+# Iniciar em modo produção
+npm start
 
-## 🎯 Como Usar
-
-### 1. Abertura de Chamados
-1. Abra `index.html` no navegador
-2. Preencha os campos obrigatórios:
-   - Nome e Sobrenome
-   - Setor
-   - Área de Destino
-   - Descrição do problema
-3. Opcionalmente anexe arquivos
-4. Clique em "Enviar Chamado"
-
-### 2. Gerenciamento (Admin)
-1. Clique no botão "Painel Admin" ou acesse `admin.html`
-2. **Dashboard:** Veja estatísticas gerais
-3. **Tickets:** Visualize e filtre todos os chamados
-4. **Estatísticas:** Relatórios detalhados
-
-### 3. Funcionalidades do Admin
-- **Filtrar por:** Status, Prioridade, Pesquisa
-- **Atualizar:** Status e prioridade de tickets
-- **Adicionar:** Notas de acompanhamento
-- **Download:** Arquivos anexados
-- **Deletar:** Tickets completos
-
-## 💾 Banco de Dados
-
-O sistema simula um banco SQLite usando localStorage do navegador com:
-
-### Estrutura de Dados
-```javascript
-{
-  tickets: [
-    {
-      id: "1",
-      ticketNumber: "TK0001",
-      firstName: "João",
-      lastName: "Silva",
-      department: "TI",
-      destinationArea: "Suporte Técnico",
-      description: "Problema com impressora",
-      contact: "(11) 99999-9999",
-      files: [...],
-      status: "Aberto",
-      priority: "Média",
-      notes: [...],
-      createdAt: "2024-01-01T10:00:00.000Z",
-      updatedAt: "2024-01-01T10:00:00.000Z"
-    }
-  ],
-  nextId: 2,
-  settings: {...}
-}
+# Iniciar em modo desenvolvimento
+npm run dev
 ```
 
-### Operações CRUD
-- **CREATE:** Criar novos tickets
-- **READ:** Buscar tickets (todos, por ID, status, prioridade)
-- **UPDATE:** Atualizar campos, adicionar notas
-- **DELETE:** Remover tickets
-- **FILTER:** Pesquisa e filtros avançados
-- **STATS:** Estatísticas e relatórios
+O sistema estará disponível em `http://localhost:3000`
 
-## 🎨 Interface
+## 📄 Estrutura do projeto
 
-### Design Responsivo
-- Layout adaptativo para desktop e mobile
-- Gradientes modernos
-- Animações suaves
-- Componentes intuitivos
+```
+sistema-tickets/
+├── dist/                   # Arquivos de distribuição (produção)
+│   ├── assets/             # Recursos estáticos
+│   │   ├── css/            # Folhas de estilo minificadas
+│   │   └── js/             # Arquivos JavaScript minificados
+│   ├── index.html          # Página de abertura de chamados
+│   ├── admin.html          # Painel administrativo
+│   ├── 404.html            # Página de erro 404
+│   └── server.js           # Servidor Express para produção
+├── src/                    # Código fonte (desenvolvimento)
+│   ├── styles.css          # Estilos CSS
+│   ├── script.js           # JavaScript do formulário
+│   ├── admin.js            # JavaScript do painel admin
+│   └── database.js         # Simulação SQLite com localStorage
+├── package.json            # Configurações do projeto
+├── .gitignore              # Arquivos ignorados pelo Git
+└── README.md               # Documentação
+```
 
-### Componentes
-- **Cards:** Exibição de informações
-- **Modais:** Detalhes de tickets
-- **Filtros:** Pesquisa avançada
-- **Badges:** Status e prioridades
-- **Toast:** Notificações
-- **Tabs:** Navegação do admin
+## 🛠️ Tecnologias
+
+- **Frontend**: HTML5, CSS3, JavaScript ES6+
+- **Backend**: Express.js (para servir em produção)
+- **Banco de Dados**: Simulação SQLite com localStorage
+- **Segurança**: Helmet para cabeçalhos HTTP seguros
+- **Performance**: Compression para compressão gzip
+
+## 📦 Preparar para produção
+
+```bash
+# Construir arquivos minificados
+npm run build
+
+# Iniciar servidor de produção
+npm start
+```
+
+## 🧑‍💻 Desenvolvimento
+
+```bash
+# Iniciar servidor de desenvolvimento com recarga automática
+npm run dev
+```
+
+## 🔒 Segurança
+
+O sistema implementa as seguintes medidas de segurança:
+
+- Cabeçalhos HTTP seguros com Helmet
+- Content Security Policy para prevenção de XSS
+- Validação de dados no cliente
 
 ## 📱 Compatibilidade
 
-- ✅ Chrome 80+
-- ✅ Firefox 75+
-- ✅ Safari 13+
-- ✅ Edge 80+
-- ✅ Responsive Design
-
-## 🔧 Configuração
-
-Não necessita instalação ou configuração. Apenas:
-
-1. Clone ou baixe os arquivos
-2. Abra `index.html` em um navegador web
-3. Comece a usar!
-
-## 📊 Funcionalidades Avançadas
-
-### Filtros e Pesquisa
-- Pesquisa por número do ticket, nome, departamento
-- Filtro por status (Aberto, Em Andamento, Resolvido, Fechado)
-- Filtro por prioridade (Crítica, Alta, Média, Baixa)
-
-### Sistema de Arquivos
-- Upload múltiplo
-- Preview de imagens
-- Validação de tipo e tamanho
-- Download direto pelo admin
-
-### Notificações
-- Toast messages para feedback
-- Confirmações de ações
-- Alertas de erro
-
-## 🚀 Próximos Passos
-
-Para evolução do sistema:
-
-1. **Backend Real:** Integração com Node.js + SQLite
-2. **Autenticação:** Sistema de login
-3. **Email:** Notificações automáticas
-4. **Relatórios:** Exportação PDF/CSV
-5. **API:** Endpoints REST
-6. **PWA:** Progressive Web App
-
-## 📝 Licença
-
-Projeto de demonstração - Livre para uso e modificação.
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+- Design responsivo para todos os dispositivos

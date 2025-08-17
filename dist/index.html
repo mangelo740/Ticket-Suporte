@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Abertura de Chamados</title>
+    <link rel="stylesheet" href="assets/css/styles.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Meta tags para SEO -->
+    <meta name="description" content="Sistema de abertura e acompanhamento de chamados de suporte técnico.">
+    <meta name="keywords" content="chamados, suporte, tickets, help desk">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <!-- Botão Admin -->
+        <div class="admin-button-container">
+            <button id="adminBtn" class="admin-btn" onclick="window.location.href='admin.html'">
+                <i class="fas fa-cog"></i>
+                Painel Admin
+            </button>
+        </div>
+
+        <!-- Formulário Principal -->
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Sistema de Abertura de Chamados</h1>
+                <p>Preencha os dados abaixo para abrir um novo chamado</p>
+            </div>
+
+            <div class="form-content">
+                <form id="ticketForm">
+                    <!-- Nome e Sobrenome -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Nome <span class="required">*</span></label>
+                            <input type="text" id="firstName" name="firstName" placeholder="Digite seu nome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Sobrenome <span class="required">*</span></label>
+                            <input type="text" id="lastName" name="lastName" placeholder="Digite seu sobrenome" required>
+                        </div>
+                    </div>
+
+                    <!-- Área Solicitante -->
+                    <div class="form-group">
+                        <label for="department">Área Solicitante <span class="required">*</span></label>
+                        <select id="department" name="department" required>
+                            <option value="">Selecione sua área</option>
+                            <option value="Recursos Humanos">Recursos Humanos</option>
+                            <option value="Tecnologia da Informação - Sistema">TI - Sistema</option>
+                            <option value="Tecnologia da Informação - Infraestrutura">TI - Infraestrutura</option>
+                            <option value="Financeiro">Financeiro</option>
+                            <option value="Comercial">Comercial</option>
+                            <option value="Operações">Operações</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Jurídico">Jurídico</option>
+                            <option value="Compras">Compras</option>
+                            <option value="Administração">Administração</option>
+                        </select>
+                    </div>
+
+                    <!-- Área de Destino -->
+                    <div class="form-group">
+                        <label for="destinationArea">Área de Destino <span class="required">*</span></label>
+                        <select id="destinationArea" name="destinationArea" required>
+                            <option value="">Selecione a área de destino</option>
+                            <option value="Suporte Técnico">Suporte Técnico</option>
+                            <option value="Infraestrutura">Infraestrutura</option>
+                            <option value="Desenvolvimento">Desenvolvimento</option>
+                            <option value="Segurança da Informação">Segurança da Informação</option>
+                            <option value="Redes">Redes</option>
+                            <option value="Help Desk">Help Desk</option>
+                            <option value="Sistemas">Sistemas</option>
+                            <option value="Banco de Dados">Banco de Dados</option>
+                        </select>
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="form-group">
+                        <label for="description">Descrição do Chamado <span class="required">*</span></label>
+                        <textarea id="description" name="description" placeholder="Descreva detalhadamente o problema ou solicitação..." required></textarea>
+                    </div>
+
+                    <!-- Upload de Arquivos -->
+                    <div class="form-group">
+                        <label>Anexar Arquivos/Fotos</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.txt" style="display: none;">
+                            <div class="upload-content">
+                                <i class="fas fa-upload"></i>
+                                <p>Clique para selecionar arquivos ou fotos</p>
+                                <small>PNG, JPG, PDF, DOC, TXT (máx. 10MB cada)</small>
+                            </div>
+                        </div>
+                        <div id="fileList" class="file-list"></div>
+                    </div>
+
+                    <!-- Contato Opcional -->
+                    <div class="form-group">
+                        <label for="contact">Telefone/Contato (Opcional)</label>
+                        <input type="text" id="contact" name="contact" placeholder="(11) 99999-9999 ou email@exemplo.com">
+                    </div>
+
+                    <!-- Botão de Envio -->
+                    <div class="form-group">
+                        <button type="submit" id="submitBtn" class="submit-btn">
+                            <span id="submitText">Enviar Chamado</span>
+                            <i id="submitLoader" class="fas fa-spinner fa-spin" style="display: none;"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="assets/js/database.min.js"></script>
+    <script src="assets/js/script.min.js"></script>
+</body>
+</html>

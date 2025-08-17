@@ -1,0 +1,34 @@
+{
+  "name": "sistema-tickets",
+  "version": "1.0.0",
+  "description": "Sistema de abertura e acompanhamento de chamados",
+  "main": "dist/server.js",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "nodemon dist/server.js",
+    "build": "npm run minify-js && npm run minify-css",
+    "minify-js": "uglifyjs src/script.js -o dist/assets/js/script.min.js && uglifyjs src/admin.js -o dist/assets/js/admin.min.js && uglifyjs src/database.js -o dist/assets/js/database.min.js",
+    "minify-css": "cleancss -o dist/assets/css/styles.min.css src/styles.css"
+  },
+  "keywords": [
+    "tickets",
+    "chamados",
+    "suporte",
+    "helpdesk"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0"
+  },
+  "devDependencies": {
+    "clean-css-cli": "^5.6.2",
+    "nodemon": "^3.0.1",
+    "uglify-js": "^3.17.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

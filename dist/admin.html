@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - Sistema de Chamados</title>
+    <link rel="stylesheet" href="assets/css/styles.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Meta tags para SEO -->
+    <meta name="description" content="Painel administrativo para gerenciamento de chamados de suporte técnico.">
+    <meta name="keywords" content="admin, chamados, suporte, tickets, dashboard">
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="header-content">
+                <h1>Painel Administrativo</h1>
+                <p>Gerenciamento de Chamados</p>
+            </div>
+            <button onclick="window.location.href='index.html'" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="showTab('tickets')">Tickets</button>
+            <button class="tab-btn" onclick="showTab('stats')">Estatísticas</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalTickets">0</h3>
+                        <p>Total de Tickets</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="openTickets">0</h3>
+                        <p>Abertos</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="inProgressTickets">0</h3>
+                        <p>Em Andamento</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="resolvedTickets">0</h3>
+                        <p>Resolvidos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tickets -->
+            <div class="recent-tickets">
+                <h2>Tickets Recentes</h2>
+                <div id="recentTicketsList" class="tickets-list">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets Tab -->
+        <div id="tickets" class="tab-content">
+            <!-- Filters -->
+            <div class="filters-card">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label>Pesquisar</label>
+                        <div class="search-input">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Pesquisar tickets...">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Status</label>
+                        <select id="statusFilter">
+                            <option value="all">Todos</option>
+                            <option value="Aberto">Aberto</option>
+                            <option value="Em Andamento">Em Andamento</option>
+                            <option value="Resolvido">Resolvido</option>
+                            <option value="Fechado">Fechado</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Prioridade</label>
+                        <select id="priorityFilter">
+                            <option value="all">Todas</option>
+                            <option value="Crítica">Crítica</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Média">Média</option>
+                            <option value="Baixa">Baixa</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button onclick="loadTickets()" class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tickets List -->
+            <div class="tickets-card">
+                <div id="ticketsList" class="tickets-list">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="stats" class="tab-content">
+            <div class="stats-charts">
+                <div class="chart-card">
+                    <h3>Distribuição por Status</h3>
+                    <div id="statusChart" class="chart-content">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Distribuição por Prioridade</h3>
+                    <div id="priorityChart" class="chart-content">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para detalhes do ticket -->
+    <div id="ticketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Detalhes do Ticket</h2>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="assets/js/database.min.js"></script>
+    <script src="assets/js/admin.min.js"></script>
+</body>
+</html>
