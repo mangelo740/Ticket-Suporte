@@ -1,27 +1,31 @@
 {
   "name": "sistema-tickets",
   "version": "1.0.0",
-  "description": "Sistema de abertura e acompanhamento de chamados",
+  "description": "Sistema de abertura e acompanhamento de chamados com SQLite",
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon dist/server.js",
     "build": "npm run minify-js && npm run minify-css",
-    "minify-js": "uglifyjs src/script.js -o dist/assets/js/script.min.js && uglifyjs src/admin.js -o dist/assets/js/admin.min.js && uglifyjs src/database.js -o dist/assets/js/database.min.js",
-    "minify-css": "cleancss -o dist/assets/css/styles.min.css src/styles.css"
+    "minify-js": "uglifyjs src/script.js -o dist/assets/js/script.min.js && uglifyjs src/admin.js -o dist/assets/js/admin.min.js",
+    "minify-css": "cleancss -o dist/assets/css/styles.min.css src/styles.css",
+    "migrate": "node src/db-migration.js"
   },
   "keywords": [
     "tickets",
     "chamados",
     "suporte",
-    "helpdesk"
+    "helpdesk",
+    "sqlite"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^8.5.0",
     "compression": "^1.7.4",
     "express": "^4.18.2",
-    "helmet": "^7.0.0"
+    "helmet": "^7.0.0",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "clean-css-cli": "^5.6.2",

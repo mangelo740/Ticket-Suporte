@@ -1,6 +1,6 @@
 # Sistema de Abertura de Chamados
 
-Um sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript com simulação de banco SQLite usando localStorage.
+Um sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript com SQLite como banco de dados.
 
 ## ✨ Características
 
@@ -10,6 +10,7 @@ Um sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e Jav
 - Upload de múltiplos arquivos com preview
 - Notas de acompanhamento nos chamados
 - Responsivo para desktop e mobile
+- **Banco de dados SQLite** para armazenamento persistente
 
 ## 🚀 Como usar
 
@@ -40,29 +41,35 @@ O sistema estará disponível em `http://localhost:3000`
 
 ```
 sistema-tickets/
-├── dist/                   # Arquivos de distribuição (produção)
-│   ├── assets/             # Recursos estáticos
-│   │   ├── css/            # Folhas de estilo minificadas
-│   │   └── js/             # Arquivos JavaScript minificados
-│   ├── index.html          # Página de abertura de chamados
-│   ├── admin.html          # Painel administrativo
-│   ├── 404.html            # Página de erro 404
-│   └── server.js           # Servidor Express para produção
-├── src/                    # Código fonte (desenvolvimento)
-│   ├── styles.css          # Estilos CSS
-│   ├── script.js           # JavaScript do formulário
-│   ├── admin.js            # JavaScript do painel admin
-│   └── database.js         # Simulação SQLite com localStorage
-├── package.json            # Configurações do projeto
-├── .gitignore              # Arquivos ignorados pelo Git
-└── README.md               # Documentação
+├── db/                    # Banco de dados SQLite
+├── dist/                  # Arquivos de distribuição (produção)
+│   ├── assets/            # Recursos estáticos
+│   │   ├── css/           # Folhas de estilo minificadas
+│   │   └── js/            # Arquivos JavaScript minificados
+│   ├── index.html         # Página de abertura de chamados
+│   ├── admin.html         # Painel administrativo
+│   ├── 404.html           # Página de erro 404
+│   └── server.js          # Servidor Express para produção
+├── src/                   # Código fonte (desenvolvimento)
+│   ├── api/               # Rotas da API
+│   │   └── ticketRoutes.js # Rotas para gerenciamento de tickets
+│   ├── db/                # Módulos de banco de dados
+│   │   └── database.js    # Cliente SQLite e operações do banco
+│   ├── db-migration.js    # Script de migração localStorage -> SQLite
+│   ├── styles.css         # Estilos CSS
+│   ├── script.js          # JavaScript do formulário
+│   ├── admin.js           # JavaScript do painel admin
+│   └── database.js        # Antiga implementação com localStorage
+├── package.json           # Configurações do projeto
+├── .gitignore             # Arquivos ignorados pelo Git
+└── README.md              # Documentação
 ```
 
 ## 🛠️ Tecnologias
 
 - **Frontend**: HTML5, CSS3, JavaScript ES6+
 - **Backend**: Express.js (para servir em produção)
-- **Banco de Dados**: Simulação SQLite com localStorage
+- **Banco de Dados**: SQLite (better-sqlite3)
 - **Segurança**: Helmet para cabeçalhos HTTP seguros
 - **Performance**: Compression para compressão gzip
 
@@ -83,13 +90,27 @@ npm start
 npm run dev
 ```
 
+## 🔄 Migração de Dados
+
+Se você já possuía tickets no localStorage e deseja migrá-los para o SQLite:
+
+```bash
+# Primeiro, exporte os dados do localStorage para um arquivo JSON
+# (Isso pode ser feito através do console do navegador)
+# Então coloque o arquivo em /data/tickets.json
+
+# Executar o script de migração
+node src/db-migration.js
+```
+
 ## 🔒 Segurança
 
 O sistema implementa as seguintes medidas de segurança:
 
 - Cabeçalhos HTTP seguros com Helmet
 - Content Security Policy para prevenção de XSS
-- Validação de dados no cliente
+- Validação de dados no cliente e servidor
+- Armazenamento seguro em SQLite
 
 ## 📱 Compatibilidade
 
