@@ -432,7 +432,7 @@ body {
     padding: 1.5rem 1.5rem 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937;
+    color: white;
 }
 
 .tickets-list {
@@ -655,7 +655,6 @@ body.dark-mode .recent-tickets,
 body.dark-mode .chart-card,
 body.dark-mode .modal-content {
     background: #23232a;
-    color: #f3f4f6;
     box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
