@@ -1,121 +1,170 @@
-# Sistema de Abertura de Chamados
+# Sistema de Abertura de Chamados - Vanilla JavaScript
 
-Um sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript com SQLite como banco de dados.
+Sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript puro com simulação de banco SQLite usando localStorage.
 
-## ✨ Características
+## 🚀 Funcionalidades
 
+### 📋 Sistema de Tickets
 - Formulário completo para abertura de chamados
-- Painel administrativo com dashboard
-- Gestão de tickets com filtros e pesquisa
-- Upload de múltiplos arquivos com preview
-- Notas de acompanhamento nos chamados
-- Responsivo para desktop e mobile
-- **Banco de dados SQLite** para armazenamento persistente
+- Upload de múltiplos arquivos (imagens, documentos)
+- Preview de imagens
+- Validação de campos obrigatórios
+- Armazenamento local simulando SQLite
 
-## 🚀 Como usar
+### 🔧 Painel Administrativo
+- **Dashboard:** Visão geral com estatísticas em tempo real
+- **Gerenciamento:** Lista completa de tickets com filtros
+- **Detalhes:** Visualização completa de cada ticket
+- **Edição:** Alteração de status e prioridade
+- **Notas:** Sistema de acompanhamento
+- **Download:** Arquivos anexados
+- **Exclusão:** Remoção de tickets
 
-### Instalação
-
-```bash
-# Clonar o repositório
-git clone https://github.com/seu-usuario/sistema-tickets.git
-cd sistema-tickets
-
-# Instalar dependências
-npm install
-```
-
-### Execução
-
-```bash
-# Iniciar em modo produção
-npm start
-
-# Iniciar em modo desenvolvimento
-npm run dev
-```
-
-O sistema estará disponível em `http://localhost:3000`
-
-## 📄 Estrutura do projeto
+## 📁 Estrutura de Arquivos
 
 ```
-sistema-tickets/
-├── db/                    # Banco de dados SQLite
-├── dist/                  # Arquivos de distribuição (produção)
-│   ├── assets/            # Recursos estáticos
-│   │   ├── css/           # Folhas de estilo minificadas
-│   │   └── js/            # Arquivos JavaScript minificados
-│   ├── index.html         # Página de abertura de chamados
-│   ├── admin.html         # Painel administrativo
-│   ├── 404.html           # Página de erro 404
-│   └── server.js          # Servidor Express para produção
-├── src/                   # Código fonte (desenvolvimento)
-│   ├── api/               # Rotas da API
-│   │   └── ticketRoutes.js # Rotas para gerenciamento de tickets
-│   ├── db/                # Módulos de banco de dados
-│   │   └── database.js    # Cliente SQLite e operações do banco
-│   ├── db-migration.js    # Script de migração localStorage -> SQLite
-│   ├── styles.css         # Estilos CSS
-│   ├── script.js          # JavaScript do formulário
-│   ├── admin.js           # JavaScript do painel admin
-│   └── database.js        # Antiga implementação com localStorage
-├── package.json           # Configurações do projeto
-├── .gitignore             # Arquivos ignorados pelo Git
-└── README.md              # Documentação
+ticket-system-vanilla/
+├── index.html          # Página principal - formulário de tickets
+├── admin.html          # Painel administrativo
+├── styles.css          # Estilos CSS responsivos
+├── script.js           # JavaScript do formulário
+├── admin.js            # JavaScript do painel admin
+├── database.js         # Simulação SQLite com localStorage
+└── README.md           # Documentação
 ```
 
-## 🛠️ Tecnologias
+## 🛠️ Tecnologias Utilizadas
 
-- **Frontend**: HTML5, CSS3, JavaScript ES6+
-- **Backend**: Express.js (para servir em produção)
-- **Banco de Dados**: SQLite (better-sqlite3)
-- **Segurança**: Helmet para cabeçalhos HTTP seguros
-- **Performance**: Compression para compressão gzip
+- **HTML5:** Estrutura semântica
+- **CSS3:** Estilos modernos e responsivos
+- **JavaScript ES6+:** Funcionalidades interativas
+- **LocalStorage:** Simulação de banco SQLite
+- **Font Awesome:** Ícones
 
-## 📦 Preparar para produção
+## 🎯 Como Usar
 
-```bash
-# Construir arquivos minificados
-npm run build
+### 1. Abertura de Chamados
+1. Abra `index.html` no navegador
+2. Preencha os campos obrigatórios:
+   - Nome e Sobrenome
+   - Setor
+   - Área de Destino
+   - Descrição do problema
+3. Opcionalmente anexe arquivos
+4. Clique em "Enviar Chamado"
 
-# Iniciar servidor de produção
-npm start
+### 2. Gerenciamento (Admin)
+1. Clique no botão "Painel Admin" ou acesse `admin.html`
+2. **Dashboard:** Veja estatísticas gerais
+3. **Tickets:** Visualize e filtre todos os chamados
+4. **Estatísticas:** Relatórios detalhados
+
+### 3. Funcionalidades do Admin
+- **Filtrar por:** Status, Prioridade, Pesquisa
+- **Atualizar:** Status e prioridade de tickets
+- **Adicionar:** Notas de acompanhamento
+- **Download:** Arquivos anexados
+- **Deletar:** Tickets completos
+
+## 💾 Banco de Dados
+
+O sistema simula um banco SQLite usando localStorage do navegador com:
+
+### Estrutura de Dados
+```javascript
+{
+  tickets: [
+    {
+      id: "1",
+      ticketNumber: "TK0001",
+      firstName: "João",
+      lastName: "Silva",
+      department: "TI",
+      destinationArea: "Suporte Técnico",
+      description: "Problema com impressora",
+      contact: "(11) 99999-9999",
+      files: [...],
+      status: "Aberto",
+      priority: "Média",
+      notes: [...],
+      createdAt: "2024-01-01T10:00:00.000Z",
+      updatedAt: "2024-01-01T10:00:00.000Z"
+    }
+  ],
+  nextId: 2,
+  settings: {...}
+}
 ```
 
-## 🧑‍💻 Desenvolvimento
+### Operações CRUD
+- **CREATE:** Criar novos tickets
+- **READ:** Buscar tickets (todos, por ID, status, prioridade)
+- **UPDATE:** Atualizar campos, adicionar notas
+- **DELETE:** Remover tickets
+- **FILTER:** Pesquisa e filtros avançados
+- **STATS:** Estatísticas e relatórios
 
-```bash
-# Iniciar servidor de desenvolvimento com recarga automática
-npm run dev
-```
+## 🎨 Interface
 
-## 🔄 Migração de Dados
+### Design Responsivo
+- Layout adaptativo para desktop e mobile
+- Gradientes modernos
+- Animações suaves
+- Componentes intuitivos
 
-Se você já possuía tickets no localStorage e deseja migrá-los para o SQLite:
-
-```bash
-# Primeiro, exporte os dados do localStorage para um arquivo JSON
-# (Isso pode ser feito através do console do navegador)
-# Então coloque o arquivo em /data/tickets.json
-
-# Executar o script de migração
-node src/db-migration.js
-```
-
-## 🔒 Segurança
-
-O sistema implementa as seguintes medidas de segurança:
-
-- Cabeçalhos HTTP seguros com Helmet
-- Content Security Policy para prevenção de XSS
-- Validação de dados no cliente e servidor
-- Armazenamento seguro em SQLite
+### Componentes
+- **Cards:** Exibição de informações
+- **Modais:** Detalhes de tickets
+- **Filtros:** Pesquisa avançada
+- **Badges:** Status e prioridades
+- **Toast:** Notificações
+- **Tabs:** Navegação do admin
 
 ## 📱 Compatibilidade
 
-- Chrome 80+
-- Firefox 75+
-- Safari 13+
-- Edge 80+
-- Design responsivo para todos os dispositivos
+- ✅ Chrome 80+
+- ✅ Firefox 75+
+- ✅ Safari 13+
+- ✅ Edge 80+
+- ✅ Responsive Design
+
+## 🔧 Configuração
+
+Não necessita instalação ou configuração. Apenas:
+
+1. Clone ou baixe os arquivos
+2. Abra `index.html` em um navegador web
+3. Comece a usar!
+
+## 📊 Funcionalidades Avançadas
+
+### Filtros e Pesquisa
+- Pesquisa por número do ticket, nome, departamento
+- Filtro por status (Aberto, Em Andamento, Resolvido, Fechado)
+- Filtro por prioridade (Crítica, Alta, Média, Baixa)
+
+### Sistema de Arquivos
+- Upload múltiplo
+- Preview de imagens
+- Validação de tipo e tamanho
+- Download direto pelo admin
+
+### Notificações
+- Toast messages para feedback
+- Confirmações de ações
+- Alertas de erro
+
+## 🚀 Próximos Passos
+
+Para evolução do sistema:
+
+1. **Backend Real:** Integração com Node.js + SQLite
+2. **Autenticação:** Sistema de login
+3. **Email:** Notificações automáticas
+4. **Relatórios:** Exportação PDF/CSV
+5. **API:** Endpoints REST
+6. **PWA:** Progressive Web App
+
+## 📝 Licença
+
+Projeto de demonstração - Livre para uso e modificação.
