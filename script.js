@@ -97,10 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const lastName = document.getElementById('lastName').value.trim();
         const department = document.getElementById('department').value;
         const destinationArea = document.getElementById('destinationArea').value;
+        const subject = document.getElementById('subject').value.trim(); // NOVO
         const description = document.getElementById('description').value.trim();
         const contact = document.getElementById('contact').value.trim();
 
-        if (!firstName || !lastName || !department || !destinationArea || !description) {
+        if (!firstName || !lastName || !department || !destinationArea || !subject || !description) {
             showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
             return;
         }
@@ -129,31 +130,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             );
 
-            // Criar ticket
+            // Criar ticket via API
             const ticketData = {
                 firstName,
                 lastName,
                 department,
                 destinationArea,
+                subject,
                 description,
                 contact,
                 files: filesData
             };
 
-            const ticketNumber = ticketDB.createTicket(ticketData);
-            
-            showToast(`Chamado ${ticketNumber} criado com sucesso!`, 'success');
-            
-            // Limpar formulário
+            const result = await ticketDB.createTicket(ticketData);
+
+            showToast(`Chamado ${result.ticketNumber} criado com sucesso!`, 'success');
             form.reset();
             selectedFiles = [];
             renderFileList();
-            
+            window.checkDbStatus();
         } catch (error) {
             console.error('Erro ao criar chamado:', error);
             showToast('Erro ao criar chamado. Tente novamente.', 'error');
+            window.checkDbStatus();
         } finally {
-            // Ocultar loading
             submitBtn.disabled = false;
             submitText.style.display = 'inline';
             submitLoader.style.display = 'none';

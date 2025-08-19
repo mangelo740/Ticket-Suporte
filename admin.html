@@ -164,7 +164,11 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <script src="database.js"></script>
+    <div id="dbStatus" style="position:fixed;top:10px;right:10px;z-index:2000;">
+        <span id="dbStatusIcon" style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
+    </div>
+
+    <script src="database.api.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>

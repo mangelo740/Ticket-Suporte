@@ -42,9 +42,11 @@ body {
 /* Form Card */
 .form-card {
     background: white;
+    max-width: 700px;
     border-radius: 1rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    margin: 0 auto; /* Centraliza horizontalmente */
 }
 
 .form-header {
@@ -224,12 +226,13 @@ body {
 /* Admin Panel Styles */
 .admin-container {
     max-width: 1200px;
+    align-items: center;
     margin: 0 auto;
     padding: 2rem;
 }
 
 .admin-header {
-    display: flex;
+    display: flex; /* Adicione esta linha */
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;

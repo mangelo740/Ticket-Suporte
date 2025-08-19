@@ -1,0 +1,25 @@
+{
+  "name": "ticket-suporte",
+  "version": "1.0.0",
+  "description": "Sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript puro com simulação de banco SQLite usando localStorage.",
+  "main": "admin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mangelo740/Ticket-Suporte.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mangelo740/Ticket-Suporte/issues"
+  },
+  "homepage": "https://github.com/mangelo740/Ticket-Suporte#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "sqlite3": "^5.1.7"
+  }
+}
