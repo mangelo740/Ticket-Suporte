@@ -19,7 +19,9 @@
   "homepage": "https://github.com/mangelo740/Ticket-Suporte#readme",
   "dependencies": {
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "express": "^5.1.0",
+    "multer": "^2.0.2",
     "sqlite3": "^5.1.7"
   }
 }

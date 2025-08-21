@@ -112,24 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
         submitLoader.style.display = 'inline';
 
         try {
-            // Processar arquivos
-            const filesData = await Promise.all(
-                selectedFiles.map(fileObj => {
-                    return new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            resolve({
-                                name: fileObj.name,
-                                size: fileObj.size,
-                                type: fileObj.type,
-                                data: e.target.result
-                            });
-                        };
-                        reader.readAsDataURL(fileObj.file);
-                    });
-                })
-            );
-
             // Criar ticket via API
             const ticketData = {
                 firstName,
@@ -138,11 +120,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 destinationArea,
                 subject,
                 description,
-                contact,
-                files: filesData
+                contact
+                // NÃO envie files aqui!
             };
 
             const result = await ticketDB.createTicket(ticketData);
+
+            // Enviar arquivos para o servidor
+            for (const arquivo of selectedFiles) {
+                const formData = new FormData();
+                formData.append('file', arquivo.file); // Use arquivo.file!
+
+                await fetch(`http://10.3.0.133:3001/api/tickets/${result.id}/attachments`, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
 
             showToast(`Chamado ${result.ticketNumber} criado com sucesso!`, 'success');
             form.reset();

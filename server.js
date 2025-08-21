@@ -1,10 +1,22 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const dayjs = require('dayjs');
+const multer = require('multer');
+require('dayjs/plugin/utc');
+require('dayjs/plugin/timezone');
+dayjs.extend(require('dayjs/plugin/utc'));
+dayjs.extend(require('dayjs/plugin/timezone'));
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+app.use(express.json({ limit: '1mb' })); // Limite pequeno para evitar uploads grandes via JSON
+const corsOptions = {
+    origin: '*', // ou coloque o endereço do frontend, ex: 'http://10.3.0.133:5500'
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+app.use('/uploads', express.static('uploads'));
 
 // Conexão com o banco
 const db = new sqlite3.Database('./tickets.db');
@@ -28,15 +40,34 @@ db.run(`
     )
 `);
 
-// Criar novo chamado
+const path = require('path');
+const fs = require('fs');
+const uploadDir = path.join(__dirname, 'Arquivos Chamados');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        // Gera nome único preservando extensão
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+
+// Criar novo chamado (sem arquivos)
 app.post('/api/tickets', (req, res) => {
     const t = req.body;
+    const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
+
     db.run(`
         INSERT INTO tickets (
             ticketNumber, firstName, lastName, department, destinationArea, subject, description, contact, status, priority, createdAt, updatedAt
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-        t.ticketNumber, t.firstName, t.lastName, t.department, t.destinationArea, t.subject, t.description, t.contact, t.status || 'Aberto', t.priority || 'Média', new Date().toISOString(), new Date().toISOString()
+        t.ticketNumber, t.firstName, t.lastName, t.department, t.destinationArea, t.subject, t.description, t.contact, t.status || 'Aberto', t.priority || 'Média', nowBR, nowBR
     ], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ id: this.lastID, ticketNumber: t.ticketNumber });
@@ -63,14 +94,25 @@ app.get('/api/tickets/:id', (req, res) => {
 app.put('/api/tickets/:id', (req, res) => {
     const id = req.params.id;
     const updates = req.body;
+    const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
 
-    // Monta dinamicamente o SET do SQL apenas com os campos enviados
+    // Lista de campos válidos conforme sua tabela
+    const validFields = [
+        'firstName', 'lastName', 'status', 'priority',
+        'department', 'destinationArea', 'subject',
+        'description', 'notes', 'contact'
+    ];
+
     const fields = [];
     const values = [];
-    for (const key in updates) {
-        fields.push(`${key} = ?`);
-        values.push(updates[key]);
+    for (const key of validFields) {
+        if (updates[key] !== undefined) {
+            fields.push(`${key} = ?`);
+            values.push(updates[key]);
+        }
     }
+    fields.push('updatedAt = ?');
+    values.push(nowBR);
     values.push(id);
 
     if (fields.length === 0) {
@@ -78,7 +120,7 @@ app.put('/api/tickets/:id', (req, res) => {
     }
 
     db.run(
-        `UPDATE tickets SET ${fields.join(', ')}, updatedAt = datetime('now') WHERE id = ?`,
+        `UPDATE tickets SET ${fields.join(', ')} WHERE id = ?`,
         values,
         function (err) {
             if (err) return res.status(500).json({ error: err.message });
@@ -98,4 +140,30 @@ app.delete('/api/tickets/:id', (req, res) => {
     });
 });
 
+// Upload de arquivo para um chamado
+// Permitir múltiplos anexos por ticket
+app.post('/api/tickets/:id/attachments', upload.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    const ticketId = req.params.id;
+    const filePath = path.join('Arquivos Chamados', req.file.filename);
+    const originalName = req.file.originalname;
+    // Busca anexos existentes
+    db.get('SELECT attachments FROM tickets WHERE id = ?', [ticketId], (err, row) => {
+        let attachments = [];
+        if (row && row.attachments) {
+            try {
+                attachments = JSON.parse(row.attachments);
+            } catch {
+                attachments = [];
+            }
+        }
+        attachments.push({ path: filePath, name: originalName });
+        db.run('UPDATE tickets SET attachments = ? WHERE id = ?', [JSON.stringify(attachments), ticketId], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ filename: req.file.filename, originalname: req.file.originalname, path: filePath });
+        });
+    });
+});
+
+app.use('/Arquivos Chamados', express.static(path.join(__dirname, 'Arquivos Chamados')));
 app.listen(3001, () => console.log('API rodando em http://localhost:3001'));

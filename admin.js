@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let currentTickets = [];
 let selectedTicket = null;
+let isEditing = false;
 
 // Tabs
 function showTab(tabId) {
@@ -190,40 +191,268 @@ function renderStats() {
 // Abrir modal do ticket
 function openTicketModal(ticket) {
     selectedTicket = ticket;
-    const modal = document.getElementById('ticketModal');
-    if (!modal) return;
-    modal.classList.add('active');
-    document.getElementById('modalTitle').textContent = `Ticket ${ticket.ticketNumber}`;
-    document.getElementById('modalBody').innerHTML = `
-        <p><strong>Nome:</strong> ${ticket.firstName} ${ticket.lastName}</p>
-        <p><strong>Setor:</strong> ${ticket.department}</p>
-        <p><strong>Área de Destino:</strong> ${ticket.destinationArea}</p>
-        <p><strong>Assunto:</strong> ${ticket.subject}</p>
-        <p><strong>Descrição:</strong> ${ticket.description}</p>
-        <p><strong>Status:</strong> 
-            <select id="modalStatus" onchange="updateTicketField('status', this.value)">
-                <option value="Aberto" ${ticket.status === 'Aberto' ? 'selected' : ''}>Aberto</option>
-                <option value="Em Andamento" ${ticket.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
-                <option value="Resolvido" ${ticket.status === 'Resolvido' ? 'selected' : ''}>Resolvido</option>
-                <option value="Fechado" ${ticket.status === 'Fechado' ? 'selected' : ''}>Fechado</option>
-            </select>
-        </p>
-        <p><strong>Prioridade:</strong> 
-            <select id="modalPriority" onchange="updateTicketField('priority', this.value)">
-                <option value="Baixa" ${ticket.priority === 'Baixa' ? 'selected' : ''}>Baixa</option>
-                <option value="Média" ${ticket.priority === 'Média' ? 'selected' : ''}>Média</option>
-                <option value="Alta" ${ticket.priority === 'Alta' ? 'selected' : ''}>Alta</option>
-                <option value="Crítica" ${ticket.priority === 'Crítica' ? 'selected' : ''}>Crítica</option>
-            </select>
-        </p>
-        <p><strong>Contato:</strong> ${ticket.contact || 'Não informado'}</p>
-        <p><strong>Criado:</strong> ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</p>
-        <p><strong>Atualizado:</strong> ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</p>
-        <button onclick="deleteTicket()" style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer;">
-            <i class="fas fa-trash"></i> Deletar
-        </button>
-        <button onclick="closeModal()" style="margin-left: 1rem;">Fechar</button>
+    isEditing = false;
+    renderModalContent();
+    document.getElementById('ticketModal').classList.add('active');
+}
+
+function renderModalContent() {
+    const ticket = selectedTicket;
+    const modalTitle = document.getElementById('modalTitle');
+    modalTitle.textContent = `${ticket.ticketNumber}`;
+
+    const modalBody = document.getElementById('modalBody');
+    if (!modalBody) return;
+
+    // Exibir link de download do anexo salvo no backend
+    let anexos = 'Nenhum arquivo anexado';
+    if (ticket.attachments && typeof ticket.attachments === 'string' && ticket.attachments !== '') {
+        const [filePath, originalName] = ticket.attachments.split('|');
+        const fileName = originalName || filePath.split('/').pop();
+        const fileUrl = `/uploads/${filePath.split('/').pop()}`;
+        anexos = `<a href=\"/uploads/${filePath.split('/').pop()}\" download=\"${fileName}\" style="color:#3b82f6;text-decoration:underline;margin-right:8px;"><i class="fas fa-paperclip"></i> ${fileName}</a>`;
+    }
+
+    const historico = (ticket.history || [
+        {
+            user: 'Michel / Ti - Sistema',
+            date: '19/08/2025 - 08:23:45',
+            text: 'Teste de anotação e histórico: Anexou um arquivo novo: ArquivoAtualizado1.jpg / Arquivo.zip',
+            color: '#22c55e'
+        },
+        {
+            user: 'Ernand / Desenvolvimento',
+            date: '19/08/2025 - 08:23:45',
+            text: 'Comentário na tela de anotações',
+            color: '#3b82f6'
+        }
+    ]).map(h => `
+        <div style="margin-bottom:12px;">
+            <span style="font-weight:600;color:#fff;">${h.user}</span> 
+            <span style="color:#a1a1aa;">- Atualizado: ${h.date}</span>
+            <div style="color:${h.color};margin-left:8px;">${h.text}</div>
+        </div>
+    `).join('');
+
+    // Rodapé
+    const rodape = `
+        <div style="font-size:0.85rem;color:#a1a1aa;display:flex;justify-content:space-between;margin-top:12px;">
+            <span>Criado: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</span>
+            <span>Atualizado: ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</span>
+            <span>Tempo de chamado: 5:32</span>
+        </div>
     `;
+
+    if (!isEditing) {
+        modalBody.innerHTML = `
+            <form class="modal-fields" onsubmit="return false;">
+                <div class="modal-row">
+                    <div>
+                        <label>Nome:</label>
+                        <input type="text" value="${ticket.firstName}" disabled>
+                    </div>
+                    <div>
+                        <label>Sobrenome:</label>
+                        <input type="text" value="${ticket.lastName}" disabled>
+                    </div>
+                    <div>
+                        <label>Status:</label>
+                        <select id="modalStatus" onchange="updateTicketField('status', this.value, event)" disabled>
+                            <option value="Aberto" ${ticket.status === 'Aberto' ? 'selected' : ''}>Aberto</option>
+                            <option value="Em Andamento" ${ticket.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
+                            <option value="Resolvido" ${ticket.status === 'Resolvido' ? 'selected' : ''}>Resolvido</option>
+                            <option value="Fechado" ${ticket.status === 'Fechado' ? 'selected' : ''}>Fechado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Prioridade:</label>
+                        <select id="modalPriority" onchange="updateTicketField('priority', this.value, event)" disabled>
+                            <option value="Baixa" ${ticket.priority === 'Baixa' ? 'selected' : ''}>Baixa</option>
+                            <option value="Média" ${ticket.priority === 'Média' ? 'selected' : ''}>Média</option>
+                            <option value="Alta" ${ticket.priority === 'Alta' ? 'selected' : ''}>Alta</option>
+                            <option value="Crítica" ${ticket.priority === 'Crítica' ? 'selected' : ''}>Crítica</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-row">
+                    <div>
+                        <label>Área Solicitante:</label>
+                        <select disabled>
+                            <option>${ticket.department}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Área Destino:</label>
+                        <select disabled>
+                            <option>${ticket.destinationArea}</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label>Assunto:</label>
+                    <input type="text" value="${ticket.subject}" class="assunto" disabled>
+                </div>
+                <div>
+                    <label>Descrição:</label>
+                    <textarea disabled>${ticket.description}</textarea>
+                </div>
+                <div>
+                    <label>Anexos:</label>
+                    <div class="anexos">${anexos}</div>
+                </div>
+                <div>
+                    <label>Anotações:</label>
+                    <div class="anotacoes">
+                        <input type="text" value="${ticket.notes || ''}" disabled>
+                        <button disabled><i class="fas fa-paperclip"></i></button>
+                        <button disabled><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div>
+                    <label>Histórico:</label>
+                    <div class="historico">${historico}</div>
+                </div>
+                <div class="rodape">
+                    <span>Criado: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</span>
+                    <span>Atualizado: ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</span>
+                    <span>Tempo de chamado: 5:32</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="enableEdit()" class="edit-btn"><i class="fas fa-pen"></i> Editar</button>
+                    <button type="button" onclick="closeModal()" class="close-btn">Fechar</button>
+                </div>
+            </form>
+        `;
+    } else {
+        // Modo edição: todos campos habilitados
+        modalBody.innerHTML = `
+            <form class="modal-fields" onsubmit="return false;">
+                <div class="modal-row">
+                    <div>
+                        <label>Nome:</label>
+                        <input type="text" id="editFirstName" value="${ticket.firstName}">
+                    </div>
+                    <div>
+                        <label>Sobrenome:</label>
+                        <input type="text" id="editLastName" value="${ticket.lastName}">
+                    </div>
+                    <div>
+                        <label>Status:</label>
+                        <select id="editStatus">
+                            <option value="Aberto" ${ticket.status === 'Aberto' ? 'selected' : ''}>Aberto</option>
+                            <option value="Em Andamento" ${ticket.status === 'Em Andamento' ? 'selected' : ''}>Em Andamento</option>
+                            <option value="Resolvido" ${ticket.status === 'Resolvido' ? 'selected' : ''}>Resolvido</option>
+                            <option value="Fechado" ${ticket.status === 'Fechado' ? 'selected' : ''}>Fechado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Prioridade:</label>
+                        <select id="editPriority">
+                            <option value="Baixa" ${ticket.priority === 'Baixa' ? 'selected' : ''}>Baixa</option>
+                            <option value="Média" ${ticket.priority === 'Média' ? 'selected' : ''}>Média</option>
+                            <option value="Alta" ${ticket.priority === 'Alta' ? 'selected' : ''}>Alta</option>
+                            <option value="Crítica" ${ticket.priority === 'Crítica' ? 'selected' : ''}>Crítica</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-row">
+                    <div>
+                        <label>Área Solicitante:</label>
+                        <select id="editDepartment" disabled>
+                            <option>${ticket.department}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Área Destino:</label>
+                        <select id="editDestinationArea" disabled>
+                            <option>${ticket.destinationArea}</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label>Assunto:</label>
+                    <input type="text" id="editSubject" value="${ticket.subject}" class="assunto">
+                </div>
+                <div>
+                    <label>Descrição:</label>
+                    <textarea id="editDescription">${ticket.description}</textarea>
+                </div>
+                <div>
+                    <label>Anexos:</label>
+                    <div class="anexos">${anexos}</div>
+                </div>
+                <div>
+                    <label>Anotações:</label>
+                    <div class="anotacoes">
+                        <input type="text" id="editNotes" value="${ticket.notes || ''}">
+                        <button type="button"><i class="fas fa-paperclip"></i></button>
+                        <button type="button"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div>
+                    <label>Histórico:</label>
+                    <div class="historico">${historico}</div>
+                </div>
+                <div class="rodape">
+                    <span>Criado: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</span>
+                    <span>Atualizado: ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</span>
+                    <span>Tempo de chamado: 5:32</span>
+                </div>
+                <div class="modal-actions">
+                    <!--<button type="button" onclick="deleteTicket()" class="delete-btn"><i class="fas fa-trash"></i> Deletar</button>-->
+                    <button type="button" onclick="saveEdit()" class="save-btn"><i class="fas fa-save"></i> Salvar</button>
+                    <button type="button" onclick="disabledEdit()" class="close-btn">Cancelar</button>
+                </div>
+            </form>
+        `;
+    }
+}
+
+function enableEdit() {
+    isEditing = true;
+    renderModalContent();
+}
+
+function disabledEdit() {
+    isEditing = false;
+    renderModalContent();
+}
+
+async function saveEdit() {
+    if (!selectedTicket) return;
+
+    // Campos editáveis
+    const fields = [
+        'firstName', 'lastName', 'status', 'priority',
+        'department', 'destinationArea', 'subject',
+        'description'
+    ];
+
+    const updates = {};
+    fields.forEach(field => {
+        const input = document.getElementById('edit' + field.charAt(0).toUpperCase() + field.slice(1));
+        if (input) {
+            const newValue = input.value;
+            if (selectedTicket[field] !== newValue) {
+                updates[field] = newValue;
+            }
+        }
+    });
+
+    if (Object.keys(updates).length === 0) {
+        showToast('Nenhuma alteração detectada.');
+        return;
+    }
+
+    try {
+        await window.ticketDB.updateTicket(selectedTicket.id, updates);
+        showToast('Ticket atualizado com sucesso!');
+        isEditing = false;
+        loadTickets();
+        closeModal();
+    } catch {
+        showToast('Erro ao salvar edição', 'error');
+    }
 }
 
 // Fechar modal
@@ -233,7 +462,8 @@ function closeModal() {
 }
 
 // Atualizar campo do ticket
-async function updateTicketField(field, value) {
+async function updateTicketField(field, value, event) {
+    if (event) event.preventDefault();
     if (!selectedTicket) return;
     const updates = {};
     updates[field] = value;
@@ -242,6 +472,7 @@ async function updateTicketField(field, value) {
         selectedTicket[field] = value;
         showToast('Atualizado com sucesso!');
         loadTickets();
+        // Não fecha o modal!
     } catch (error) {
         showToast('Erro ao atualizar ticket', 'error');
     }

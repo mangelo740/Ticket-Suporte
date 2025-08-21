@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:3001/api/tickets';
+// Detecta o IP do servidor onde a página está hospedada
+const localIp = window.location.hostname;
+const API_URL = `http://${localIp}:3001/api/tickets`;
 
 class TicketDatabaseAPI {
     async createTicket(ticketData) {
@@ -64,4 +66,3 @@ window.checkDbStatus = async function() {
     }
 };
 window.addEventListener('DOMContentLoaded', window.checkDbStatus);
-loadDashboard();
