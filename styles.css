@@ -576,6 +576,8 @@ body {
     width: 100vw; height: 100vh;
     justify-content: center;
     align-items: center;
+    overflow-y: auto;
+    padding: 20px 0;
 }
 
 .modal.active {
@@ -587,10 +589,11 @@ body {
     border-radius: 12px;
     padding: 0;
     max-width: 1000px;
-    width: 100%;
+    width: 95%;
+    margin: auto;
     box-shadow: 0 8px 32px rgba(0,0,0,0.25);
     position: relative;
-    max-height: 80vh; /* Limita altura do modal */
+    max-height: 90vh; /* Aumentado para dar mais espaço */
     display: flex;
     flex-direction: column;
 }
@@ -601,12 +604,32 @@ body {
     align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid #e5e7eb;
+    position: relative;
 }
 
 .modal-header h2 {
     color: #fff;
     font-size: 2rem;
     font-weight: 700;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,0.1);
 }
 
 .close-btn {

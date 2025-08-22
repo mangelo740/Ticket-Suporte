@@ -575,10 +575,14 @@ async function addAnnotation(ticketId) {
         // Limpar campo de entrada
         annotationInput.value = '';
         
-        // Atualizar modal
+        // Atualizar modal sem fechá-lo
         renderModalContent();
         
+        // Mostra mensagem de sucesso
         showToast('Anotação adicionada com sucesso');
+        
+        // Atualiza a lista de tickets em segundo plano
+        loadTickets();
     } catch (error) {
         console.error('Erro ao adicionar anotação:', error);
         showToast('Erro ao adicionar anotação', 'error');
@@ -601,10 +605,14 @@ async function deleteAnnotation(event, ticketId, annotationId) {
         const annotations = await window.ticketDB.getAnnotations(ticketId);
         selectedTicket.annotations = annotations;
         
-        // Atualizar modal
+        // Atualizar modal sem fechá-lo
         renderModalContent();
         
+        // Mostrar notificação de sucesso
         showToast('Anotação excluída com sucesso');
+        
+        // Atualizar a lista de tickets em segundo plano
+        loadTickets();
     } catch (error) {
         console.error('Erro ao excluir anotação:', error);
         showToast('Erro ao excluir anotação', 'error');
@@ -643,8 +651,14 @@ async function uploadFileToTicket(ticketId) {
             const annotations = await window.ticketDB.getAnnotations(ticketId);
             selectedTicket.annotations = annotations;
             
+            // Atualizar modal sem fechá-lo
             renderModalContent();
+            
+            // Mostrar notificação de sucesso
             showToast('Arquivo enviado com sucesso');
+            
+            // Atualizar a lista de tickets em segundo plano
+            loadTickets();
         } catch (error) {
             console.error('Erro ao enviar arquivo:', error);
             showToast('Erro ao enviar arquivo', 'error');
@@ -664,5 +678,6 @@ function showToast(message, type = 'success') {
     toast.className = 'toast show';
     if (type === 'error') toast.classList.add('error');
     else toast.classList.remove('error');
-    setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    // Aumenta o tempo de exibição para 5 segundos
+    setTimeout(() => { toast.classList.remove('show'); }, 5000);
 }
