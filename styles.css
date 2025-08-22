@@ -694,6 +694,9 @@ body {
 
 .modal-fields .anexos {
     margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .modal-fields .anexos a {
@@ -701,6 +704,24 @@ body {
     text-decoration: underline;
     margin-right: 8px;
     font-size: 1rem;
+}
+
+.modal-fields .upload-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.modal-fields .upload-btn:hover {
+    background: #2563eb;
 }
 
 .modal-fields .anotacoes {
@@ -735,6 +756,21 @@ body {
     margin-top: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.5);
     color: #fff;
+}
+
+.delete-annotation-btn {
+    background: none;
+    border: none;
+    color: #f87171;
+    cursor: pointer;
+    font-size: 0.75rem;
+    margin-left: 8px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.delete-annotation-btn:hover {
+    opacity: 1;
 }
 
 .modal-fields .historico .item {

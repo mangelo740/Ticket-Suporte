@@ -21,7 +21,7 @@ app.use('/uploads', express.static('uploads'));
 // Conexão com o banco
 const db = new sqlite3.Database('./tickets.db');
 
-// Cria tabela se não existir
+// Cria tabelas se não existirem
 db.run(`
     CREATE TABLE IF NOT EXISTS tickets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,9 +40,21 @@ db.run(`
     )
 `);
 
+// Criar tabela de anotações
+db.run(`
+    CREATE TABLE IF NOT EXISTS annotations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticketId INTEGER,
+        text TEXT,
+        user TEXT,
+        createdAt TEXT,
+        FOREIGN KEY (ticketId) REFERENCES tickets (id)
+    )
+`);
+
 const path = require('path');
 const fs = require('fs');
-const uploadDir = path.join(__dirname, 'Arquivos Chamados');
+const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -145,7 +157,7 @@ app.delete('/api/tickets/:id', (req, res) => {
 app.post('/api/tickets/:id/attachments', upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     const ticketId = req.params.id;
-    const filePath = path.join('Arquivos Chamados', req.file.filename);
+    const filePath = path.join('uploads', req.file.filename);
     const originalName = req.file.originalname;
     // Busca anexos existentes
     db.get('SELECT attachments FROM tickets WHERE id = ?', [ticketId], (err, row) => {
@@ -160,10 +172,79 @@ app.post('/api/tickets/:id/attachments', upload.single('file'), (req, res) => {
         attachments.push({ path: filePath, name: originalName });
         db.run('UPDATE tickets SET attachments = ? WHERE id = ?', [JSON.stringify(attachments), ticketId], function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ filename: req.file.filename, originalname: req.file.originalname, path: filePath });
+            
+            // Criar uma anotação sobre o upload de arquivo
+            const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
+            const text = `Arquivo anexado: ${originalName}`;
+            const user = "Sistema";
+            
+            db.run('INSERT INTO annotations (ticketId, text, user, createdAt) VALUES (?, ?, ?, ?)', 
+                [ticketId, text, user, nowBR], 
+                (err) => {
+                    if (err) console.error('Erro ao registrar anotação:', err);
+                }
+            );
+            
+            res.json({ 
+                filename: req.file.filename, 
+                originalname: req.file.originalname, 
+                path: filePath 
+            });
         });
     });
 });
 
-app.use('/Arquivos Chamados', express.static(path.join(__dirname, 'Arquivos Chamados')));
+// API para Anotações (annotations)
+
+// Listar anotações de um chamado
+app.get('/api/tickets/:id/annotations', (req, res) => {
+    const ticketId = req.params.id;
+    db.all('SELECT * FROM annotations WHERE ticketId = ? ORDER BY createdAt DESC', [ticketId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Criar nova anotação
+app.post('/api/tickets/:id/annotations', (req, res) => {
+    const ticketId = req.params.id;
+    const { text, user } = req.body;
+    const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
+    
+    if (!text) return res.status(400).json({ error: 'O texto da anotação é obrigatório.' });
+    
+    db.run('INSERT INTO annotations (ticketId, text, user, createdAt) VALUES (?, ?, ?, ?)', 
+        [ticketId, text, user || 'Anônimo', nowBR], 
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            
+            // Atualizar data de atualização do ticket
+            db.run('UPDATE tickets SET updatedAt = ? WHERE id = ?', [nowBR, ticketId]);
+            
+            res.json({ 
+                id: this.lastID, 
+                ticketId, 
+                text, 
+                user: user || 'Anônimo', 
+                createdAt: nowBR 
+            });
+        }
+    );
+});
+
+// Deletar uma anotação
+app.delete('/api/tickets/:ticketId/annotations/:annotationId', (req, res) => {
+    const { ticketId, annotationId } = req.params;
+    
+    db.run('DELETE FROM annotations WHERE id = ? AND ticketId = ?', 
+        [annotationId, ticketId], 
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            if (this.changes === 0) return res.status(404).json({ error: 'Anotação não encontrada.' });
+            res.json({ deleted: this.changes });
+        }
+    );
+});
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.listen(3001, () => console.log('API rodando em http://localhost:3001'));

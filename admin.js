@@ -189,11 +189,24 @@ function renderStats() {
 }
 
 // Abrir modal do ticket
-function openTicketModal(ticket) {
+async function openTicketModal(ticket) {
     selectedTicket = ticket;
     isEditing = false;
-    renderModalContent();
-    document.getElementById('ticketModal').classList.add('active');
+    
+    try {
+        // Carregar anotações do ticket
+        const annotations = await window.ticketDB.getAnnotations(ticket.id);
+        selectedTicket.annotations = annotations;
+        
+        renderModalContent();
+        document.getElementById('ticketModal').classList.add('active');
+    } catch (error) {
+        console.error("Erro ao carregar anotações:", error);
+        showToast("Erro ao carregar anotações do ticket", "error");
+        
+        renderModalContent();
+        document.getElementById('ticketModal').classList.add('active');
+    }
 }
 
 function renderModalContent() {
@@ -204,33 +217,70 @@ function renderModalContent() {
     const modalBody = document.getElementById('modalBody');
     if (!modalBody) return;
 
-    // Exibir link de download do anexo salvo no backend
+    // Exibir links de download dos anexos salvos no backend
     let anexos = 'Nenhum arquivo anexado';
-    if (ticket.attachments && typeof ticket.attachments === 'string' && ticket.attachments !== '') {
-        const [filePath, originalName] = ticket.attachments.split('|');
-        const fileName = originalName || filePath.split('/').pop();
-        const fileUrl = `/uploads/${filePath.split('/').pop()}`;
-        anexos = `<a href=\"/uploads/${filePath.split('/').pop()}\" download=\"${fileName}\" style="color:#3b82f6;text-decoration:underline;margin-right:8px;"><i class="fas fa-paperclip"></i> ${fileName}</a>`;
+    if (ticket.attachments) {
+        let attachmentsList = [];
+        try {
+            if (typeof ticket.attachments === 'string') {
+                attachmentsList = JSON.parse(ticket.attachments);
+            } else if (Array.isArray(ticket.attachments)) {
+                attachmentsList = ticket.attachments;
+            }
+        } catch (e) {
+            console.error('Erro ao parsear anexos:', e);
+        }
+        
+        if (attachmentsList.length > 0) {
+            anexos = attachmentsList.map(attachment => {
+                const filePath = attachment.path;
+                const fileName = attachment.name || filePath.split('/').pop();
+                return `<a href="${filePath}" download="${fileName}" style="color:#3b82f6;text-decoration:underline;margin-right:8px;"><i class="fas fa-paperclip"></i> ${fileName}</a>`;
+            }).join('<br>');
+        }
     }
 
-    const historico = (ticket.history || [
-        {
-            user: 'Michel / Ti - Sistema',
-            date: '19/08/2025 - 08:23:45',
-            text: 'Teste de anotação e histórico: Anexou um arquivo novo: ArquivoAtualizado1.jpg / Arquivo.zip',
-            color: '#22c55e'
-        },
-        {
-            user: 'Ernand / Desenvolvimento',
-            date: '19/08/2025 - 08:23:45',
-            text: 'Comentário na tela de anotações',
+    // Mostrar anotações do ticket
+    let historicoItems = [];
+    
+    // Adicionar anotações do banco de dados
+    if (ticket.annotations && Array.isArray(ticket.annotations)) {
+        historicoItems = ticket.annotations.map(annotation => {
+            const date = new Date(annotation.createdAt).toLocaleString('pt-BR');
+            return {
+                id: annotation.id,
+                user: annotation.user,
+                date: date,
+                text: annotation.text,
+                color: annotation.text.includes('Arquivo anexado') ? '#22c55e' : '#3b82f6'
+            };
+        });
+    }
+    
+    // Adicionar histórico legado se existir
+    if (ticket.history && Array.isArray(ticket.history)) {
+        historicoItems = [...historicoItems, ...ticket.history];
+    }
+    
+    // Se não houver anotações, mostrar mensagem padrão
+    if (historicoItems.length === 0) {
+        historicoItems.push({
+            user: 'Sistema',
+            date: new Date().toLocaleString('pt-BR'),
+            text: 'Ticket criado',
             color: '#3b82f6'
-        }
-    ]).map(h => `
-        <div style="margin-bottom:12px;">
+        });
+    }
+    
+    // Renderizar histórico de anotações
+    const historico = historicoItems.map(h => `
+        <div style="margin-bottom:12px;" ${h.id ? `data-annotation-id="${h.id}"` : ''}>
             <span style="font-weight:600;color:#fff;">${h.user}</span> 
-            <span style="color:#a1a1aa;">- Atualizado: ${h.date}</span>
-            <div style="color:${h.color};margin-left:8px;">${h.text}</div>
+            <span style="color:#a1a1aa;">- ${h.date}</span>
+            <div style="color:${h.color};margin-left:8px;">
+                ${h.text}
+                ${h.id && !isEditing ? `<button onclick="deleteAnnotation(event, ${ticket.id}, ${h.id})" class="delete-annotation-btn"><i class="fas fa-times"></i></button>` : ''}
+            </div>
         </div>
     `).join('');
 
@@ -298,14 +348,18 @@ function renderModalContent() {
                 </div>
                 <div>
                     <label>Anexos:</label>
-                    <div class="anexos">${anexos}</div>
+                    <div class="anexos">
+                        ${anexos}
+                        <button type="button" onclick="uploadFileToTicket(${ticket.id})" class="upload-btn">
+                            <i class="fas fa-paperclip"></i> Adicionar arquivo
+                        </button>
+                    </div>
                 </div>
                 <div>
                     <label>Anotações:</label>
                     <div class="anotacoes">
-                        <input type="text" value="${ticket.notes || ''}" disabled>
-                        <button disabled><i class="fas fa-paperclip"></i></button>
-                        <button disabled><i class="fas fa-plus"></i></button>
+                        <input type="text" id="newAnnotation" placeholder="Adicionar uma anotação...">
+                        <button type="button" onclick="addAnnotation(${ticket.id})"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
                 <div>
@@ -379,14 +433,18 @@ function renderModalContent() {
                 </div>
                 <div>
                     <label>Anexos:</label>
-                    <div class="anexos">${anexos}</div>
+                    <div class="anexos">
+                        ${anexos}
+                        <button type="button" onclick="uploadFileToTicket(${ticket.id})" class="upload-btn">
+                            <i class="fas fa-paperclip"></i> Adicionar arquivo
+                        </button>
+                    </div>
                 </div>
                 <div>
                     <label>Anotações:</label>
                     <div class="anotacoes">
-                        <input type="text" id="editNotes" value="${ticket.notes || ''}">
-                        <button type="button"><i class="fas fa-paperclip"></i></button>
-                        <button type="button"><i class="fas fa-plus"></i></button>
+                        <input type="text" id="newAnnotation" placeholder="Adicionar uma anotação...">
+                        <button type="button" onclick="addAnnotation(${ticket.id})"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
                 <div>
@@ -491,6 +549,111 @@ async function deleteTicket() {
             showToast('Erro ao deletar ticket', 'error');
         }
     }
+}
+
+// Função para adicionar uma anotação
+async function addAnnotation(ticketId) {
+    const annotationInput = document.getElementById('newAnnotation');
+    const text = annotationInput.value.trim();
+    
+    if (!text) {
+        showToast('Digite uma anotação', 'error');
+        return;
+    }
+    
+    try {
+        // Usuário simulado - em um sistema real, seria obtido do login
+        const user = 'Admin';
+        
+        // Chamar API para adicionar anotação
+        await window.ticketDB.addAnnotation(ticketId, text, user);
+        
+        // Recarregar anotações e atualizar modal
+        const annotations = await window.ticketDB.getAnnotations(ticketId);
+        selectedTicket.annotations = annotations;
+        
+        // Limpar campo de entrada
+        annotationInput.value = '';
+        
+        // Atualizar modal
+        renderModalContent();
+        
+        showToast('Anotação adicionada com sucesso');
+    } catch (error) {
+        console.error('Erro ao adicionar anotação:', error);
+        showToast('Erro ao adicionar anotação', 'error');
+    }
+}
+
+// Função para deletar uma anotação
+async function deleteAnnotation(event, ticketId, annotationId) {
+    event.stopPropagation();
+    
+    if (!confirm('Tem certeza que deseja excluir esta anotação?')) {
+        return;
+    }
+    
+    try {
+        // Chamar API para deletar anotação
+        await window.ticketDB.deleteAnnotation(ticketId, annotationId);
+        
+        // Recarregar anotações e atualizar modal
+        const annotations = await window.ticketDB.getAnnotations(ticketId);
+        selectedTicket.annotations = annotations;
+        
+        // Atualizar modal
+        renderModalContent();
+        
+        showToast('Anotação excluída com sucesso');
+    } catch (error) {
+        console.error('Erro ao excluir anotação:', error);
+        showToast('Erro ao excluir anotação', 'error');
+    }
+}
+
+// Função para fazer upload de arquivo para ticket
+async function uploadFileToTicket(ticketId) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+    
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        // Validar tamanho (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showToast(`Arquivo ${file.name} é muito grande. Máximo 10MB.`, 'error');
+            return;
+        }
+        
+        try {
+            // Mostrar indicador de carregamento
+            showToast('Enviando arquivo...', 'info');
+            
+            // Fazer upload do arquivo
+            await window.ticketDB.uploadFile(ticketId, file);
+            
+            // Recarregar ticket e atualizar modal
+            const updatedTicket = await window.ticketDB.getTicketById(ticketId);
+            selectedTicket = updatedTicket;
+            
+            // Carregar anotações atualizadas
+            const annotations = await window.ticketDB.getAnnotations(ticketId);
+            selectedTicket.annotations = annotations;
+            
+            renderModalContent();
+            showToast('Arquivo enviado com sucesso');
+        } catch (error) {
+            console.error('Erro ao enviar arquivo:', error);
+            showToast('Erro ao enviar arquivo', 'error');
+        } finally {
+            document.body.removeChild(fileInput);
+        }
+    });
+    
+    fileInput.click();
 }
 
 // Função para mostrar toast

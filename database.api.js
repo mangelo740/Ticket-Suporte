@@ -50,6 +50,45 @@ class TicketDatabaseAPI {
         if (!res.ok) throw new Error('Erro ao buscar estatísticas');
         return await res.json();
     }
+    
+    // Métodos para Anotações
+    async getAnnotations(ticketId) {
+        const res = await fetch(`${API_URL}/${ticketId}/annotations`);
+        if (!res.ok) throw new Error('Erro ao buscar anotações');
+        return await res.json();
+    }
+
+    async addAnnotation(ticketId, text, user) {
+        const res = await fetch(`${API_URL}/${ticketId}/annotations`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, user })
+        });
+        if (!res.ok) throw new Error('Erro ao adicionar anotação');
+        return await res.json();
+    }
+
+    async deleteAnnotation(ticketId, annotationId) {
+        const res = await fetch(`${API_URL}/${ticketId}/annotations/${annotationId}`, {
+            method: 'DELETE'
+        });
+        if (!res.ok) throw new Error('Erro ao excluir anotação');
+        return await res.json();
+    }
+    
+    // Método para upload de arquivos
+    async uploadFile(ticketId, file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const res = await fetch(`${API_URL}/${ticketId}/attachments`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!res.ok) throw new Error('Erro ao fazer upload do arquivo');
+        return await res.json();
+    }
 }
 
 window.ticketDB = new TicketDatabaseAPI();
