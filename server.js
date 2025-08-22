@@ -117,14 +117,27 @@ app.put('/api/tickets/:id', (req, res) => {
 
     const fields = [];
     const values = [];
+    
+    // Verificar se o status está sendo atualizado para Resolvido ou Fechado
+    const isClosing = updates.status === 'Resolvido' || updates.status === 'Fechado';
+    
     for (const key of validFields) {
         if (updates[key] !== undefined) {
             fields.push(`${key} = ?`);
             values.push(updates[key]);
         }
     }
+    
+    // Sempre atualizar o timestamp de atualização
     fields.push('updatedAt = ?');
     values.push(nowBR);
+    
+    // Se estiver fechando o ticket, adicionar o timestamp de fechamento
+    if (isClosing) {
+        fields.push('closedAt = ?');
+        values.push(nowBR);
+    }
+    
     values.push(id);
 
     if (fields.length === 0) {

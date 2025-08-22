@@ -209,6 +209,27 @@ async function openTicketModal(ticket) {
     }
 }
 
+// Função para calcular o tempo de chamado (duração desde a criação até agora ou até fechamento)
+function calculateTicketDuration(ticket) {
+    const createdAt = new Date(ticket.createdAt);
+    // Se o ticket estiver fechado ou resolvido, usar a data de fechamento
+    // Caso contrário, usar a data atual
+    const endTime = ticket.closedAt ? new Date(ticket.closedAt) : new Date();
+    
+    // Calcular diferença em milissegundos
+    const diffMs = endTime - createdAt;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    // Formatar de acordo com a duração
+    if (diffDays > 0) {
+        return `${diffDays}d${diffHours}h`;
+    } else {
+        return `${diffHours}:${diffMinutes.toString().padStart(2, '0')}`;
+    }
+}
+
 function renderModalContent() {
     const ticket = selectedTicket;
     const modalTitle = document.getElementById('modalTitle');
@@ -283,13 +304,20 @@ function renderModalContent() {
             </div>
         </div>
     `).join('');
+    
+    // Formatar datas para exibição
+    const createdDate = new Date(ticket.createdAt).toLocaleString('pt-BR');
+    const updatedDate = new Date(ticket.updatedAt).toLocaleString('pt-BR');
+    
+    // Calcular tempo de chamado
+    const ticketDuration = calculateTicketDuration(ticket);
 
-    // Rodapé
+    // Rodapé com informações de tempo
     const rodape = `
-        <div style="font-size:0.85rem;color:#a1a1aa;display:flex;justify-content:space-between;margin-top:12px;">
-            <span>Criado: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</span>
-            <span>Atualizado: ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</span>
-            <span>Tempo de chamado: 5:32</span>
+        <div class="rodape">
+            <span>Criado: ${createdDate}</span>
+            <span>Atualizado: ${updatedDate}</span>
+            <span>Tempo de chamado: ${ticketDuration}</span>
         </div>
     `;
 
@@ -366,11 +394,7 @@ function renderModalContent() {
                     <label>Histórico:</label>
                     <div class="historico">${historico}</div>
                 </div>
-                <div class="rodape">
-                    <span>Criado: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</span>
-                    <span>Atualizado: ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</span>
-                    <span>Tempo de chamado: 5:32</span>
-                </div>
+                ${rodape}
                 <div class="modal-actions">
                     <button type="button" onclick="enableEdit()" class="edit-btn"><i class="fas fa-pen"></i> Editar</button>
                     <button type="button" onclick="closeModal()" class="close-btn">Fechar</button>
@@ -451,11 +475,7 @@ function renderModalContent() {
                     <label>Histórico:</label>
                     <div class="historico">${historico}</div>
                 </div>
-                <div class="rodape">
-                    <span>Criado: ${new Date(ticket.createdAt).toLocaleString('pt-BR')}</span>
-                    <span>Atualizado: ${new Date(ticket.updatedAt).toLocaleString('pt-BR')}</span>
-                    <span>Tempo de chamado: 5:32</span>
-                </div>
+                ${rodape}
                 <div class="modal-actions">
                     <!--<button type="button" onclick="deleteTicket()" class="delete-btn"><i class="fas fa-trash"></i> Deletar</button>-->
                     <button type="button" onclick="saveEdit()" class="save-btn"><i class="fas fa-save"></i> Salvar</button>
@@ -487,12 +507,20 @@ async function saveEdit() {
     ];
 
     const updates = {};
+    let statusChanged = false;
+    let newStatus = '';
+    
     fields.forEach(field => {
         const input = document.getElementById('edit' + field.charAt(0).toUpperCase() + field.slice(1));
         if (input) {
             const newValue = input.value;
             if (selectedTicket[field] !== newValue) {
                 updates[field] = newValue;
+                // Verificar se o status foi alterado para Resolvido ou Fechado
+                if (field === 'status') {
+                    statusChanged = true;
+                    newStatus = newValue;
+                }
             }
         }
     });
@@ -503,12 +531,24 @@ async function saveEdit() {
     }
 
     try {
-        await window.ticketDB.updateTicket(selectedTicket.id, updates);
+        // Atualizar o ticket
+        const updatedTicket = await window.ticketDB.updateTicket(selectedTicket.id, updates);
+        
+        // Se o status foi alterado para Resolvido ou Fechado, adicionar anotação
+        if (statusChanged && (newStatus === 'Resolvido' || newStatus === 'Fechado')) {
+            await window.ticketDB.addAnnotation(
+                selectedTicket.id, 
+                `Ticket marcado como ${newStatus}`, 
+                'Sistema'
+            );
+        }
+        
         showToast('Ticket atualizado com sucesso!');
         isEditing = false;
         loadTickets();
         closeModal();
-    } catch {
+    } catch (error) {
+        console.error('Erro ao salvar edição:', error);
         showToast('Erro ao salvar edição', 'error');
     }
 }
@@ -525,13 +565,39 @@ async function updateTicketField(field, value, event) {
     if (!selectedTicket) return;
     const updates = {};
     updates[field] = value;
+    
     try {
-        await window.ticketDB.updateTicket(selectedTicket.id, updates);
+        // Atualizar o ticket
+        const updatedTicket = await window.ticketDB.updateTicket(selectedTicket.id, updates);
         selectedTicket[field] = value;
+        
+        // Se o status foi alterado para Resolvido ou Fechado, adicionar anotação
+        if (field === 'status' && (value === 'Resolvido' || value === 'Fechado')) {
+            await window.ticketDB.addAnnotation(
+                selectedTicket.id, 
+                `Ticket marcado como ${value}`, 
+                'Sistema'
+            );
+            
+            // Recarregar anotações
+            const annotations = await window.ticketDB.getAnnotations(selectedTicket.id);
+            selectedTicket.annotations = annotations;
+            
+            // Recarregar o ticket para obter o campo closedAt atualizado
+            const refreshedTicket = await window.ticketDB.getTicketById(selectedTicket.id);
+            if (refreshedTicket) {
+                selectedTicket = {...selectedTicket, ...refreshedTicket};
+            }
+            
+            // Renderizar o modal novamente com as informações atualizadas
+            renderModalContent();
+        }
+        
         showToast('Atualizado com sucesso!');
         loadTickets();
         // Não fecha o modal!
     } catch (error) {
+        console.error('Erro ao atualizar ticket:', error);
         showToast('Erro ao atualizar ticket', 'error');
     }
 }
