@@ -52,6 +52,16 @@ db.run(`
     )
 `);
 
+// Criar tabela de usuários
+db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        area TEXT NOT NULL,
+        createdAt TEXT NOT NULL
+    )
+`);
+
 const path = require('path');
 const fs = require('fs');
 const uploadDir = path.join(__dirname, 'uploads');
@@ -257,6 +267,96 @@ app.delete('/api/tickets/:ticketId/annotations/:annotationId', (req, res) => {
             res.json({ deleted: this.changes });
         }
     );
+});
+
+// API para Usuários
+
+// Listar todos os usuários
+app.get('/api/users', (req, res) => {
+    db.all('SELECT * FROM users ORDER BY name', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Buscar usuário por ID
+app.get('/api/users/:id', (req, res) => {
+    db.get('SELECT * FROM users WHERE id = ?', [req.params.id], (err, row) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!row) return res.status(404).json({ error: 'Usuário não encontrado' });
+        res.json(row);
+    });
+});
+
+// Criar novo usuário
+app.post('/api/users', (req, res) => {
+    const { name, area } = req.body;
+    const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
+    
+    // Validações básicas
+    if (!name || !area) {
+        return res.status(400).json({ error: 'Nome e Área são campos obrigatórios' });
+    }
+    
+    db.run('INSERT INTO users (name, area, createdAt) VALUES (?, ?, ?)',
+        [name, area, nowBR],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({
+                id: this.lastID,
+                name,
+                area,
+                createdAt: nowBR
+            });
+        }
+    );
+});
+
+// Atualizar usuário
+app.put('/api/users/:id', (req, res) => {
+    const { name, area } = req.body;
+    const { id } = req.params;
+    
+    // Validações básicas
+    if (!name && !area) {
+        return res.status(400).json({ error: 'É necessário fornecer ao menos um campo para atualização' });
+    }
+    
+    let sql = 'UPDATE users SET ';
+    const params = [];
+    
+    if (name) {
+        sql += 'name = ?';
+        params.push(name);
+    }
+    
+    if (area) {
+        if (name) sql += ', ';
+        sql += 'area = ?';
+        params.push(area);
+    }
+    
+    sql += ' WHERE id = ?';
+    params.push(id);
+    
+    db.run(sql, params, function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
+        
+        db.get('SELECT * FROM users WHERE id = ?', [id], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(row);
+        });
+    });
+});
+
+// Deletar usuário
+app.delete('/api/users/:id', (req, res) => {
+    db.run('DELETE FROM users WHERE id = ?', [req.params.id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Usuário não encontrado' });
+        res.json({ deleted: true, id: req.params.id });
+    });
 });
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

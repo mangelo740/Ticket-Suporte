@@ -1,6 +1,7 @@
 // Detecta o IP do servidor onde a página está hospedada
 const localIp = window.location.hostname;
 const API_URL = `http://${localIp}:3001/api/tickets`;
+const USERS_API_URL = `http://${localIp}:3001/api/users`;
 
 class TicketDatabaseAPI {
     async createTicket(ticketData) {
@@ -87,6 +88,46 @@ class TicketDatabaseAPI {
         });
         
         if (!res.ok) throw new Error('Erro ao fazer upload do arquivo');
+        return await res.json();
+    }
+    // Métodos para gerenciamento de usuários
+    async getAllUsers() {
+        const res = await fetch(USERS_API_URL);
+        if (!res.ok) throw new Error('Erro ao buscar usuários');
+        return await res.json();
+    }
+    
+    async getUserById(id) {
+        const res = await fetch(`${USERS_API_URL}/${id}`);
+        if (!res.ok) throw new Error('Erro ao buscar usuário');
+        return await res.json();
+    }
+    
+    async createUser(userData) {
+        const res = await fetch(USERS_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+        if (!res.ok) throw new Error('Erro ao criar usuário');
+        return await res.json();
+    }
+    
+    async updateUser(id, updates) {
+        const res = await fetch(`${USERS_API_URL}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates)
+        });
+        if (!res.ok) throw new Error('Erro ao atualizar usuário');
+        return await res.json();
+    }
+    
+    async deleteUser(id) {
+        const res = await fetch(`${USERS_API_URL}/${id}`, { 
+            method: 'DELETE' 
+        });
+        if (!res.ok) throw new Error('Erro ao deletar usuário');
         return await res.json();
     }
 }
