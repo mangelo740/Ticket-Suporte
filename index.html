@@ -15,7 +15,7 @@
                 <i class="fas fa-cog"></i>
                 Painel Admin
             </button>
-            <button id="usersBtn" class="admin-btn" onclick="window.location.href='users.html'" style="display: none;">
+            <button id="usersBtn" class="admin-btn" onclick="window.location.href='users.html'">
                 <i class="fas fa-users"></i>
                 Usuários
             </button>
@@ -137,9 +137,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
     <div id="dbStatus" style="position:fixed;top:10px;right:10px;z-index:2000;">
-        <button onclick="window.location.href='users.html'" style="border: none; background: none;">
-            <span id="dbStatusIcon" style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
-        </button>
+        <span id="dbStatusIcon" style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
     </div>
     <script src="database.api.js"></script>
     <script src="script.js"></script>
