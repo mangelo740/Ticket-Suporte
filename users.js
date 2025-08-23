@@ -87,14 +87,23 @@ async function handleUserSubmit(e) {
     
     const nameInput = document.getElementById('userName');
     const areaInput = document.getElementById('userArea');
+    const passwordInput = document.getElementById('userPassword');
+    const confirmPasswordInput = document.getElementById('userConfirmPassword');
     
     const userData = {
         name: nameInput.value.trim(),
-        area: areaInput.value.trim()
+        area: areaInput.value.trim(),
+        password: passwordInput.value
     };
     
-    if (!userData.name || !userData.area) {
+    if (!userData.name || !userData.area || !userData.password) {
         showToast('Preencha todos os campos obrigatórios', true);
+        return;
+    }
+    
+    // Verificar se as senhas coincidem
+    if (passwordInput.value !== confirmPasswordInput.value) {
+        showToast('As senhas não coincidem', true);
         return;
     }
     
@@ -105,6 +114,8 @@ async function handleUserSubmit(e) {
         // Reset form and reload users
         nameInput.value = '';
         areaInput.value = '';
+        passwordInput.value = '';
+        confirmPasswordInput.value = '';
         loadUsers();
     } catch (error) {
         showToast(`Erro ao cadastrar usuário: ${error.message}`, true);
@@ -117,6 +128,12 @@ function openEditModal(user) {
     currentEditingUser = user;
     editUserName.value = user.name;
     editUserArea.value = user.area;
+    
+    // Clear password fields
+    const editUserPassword = document.getElementById('editUserPassword');
+    const editUserConfirmPassword = document.getElementById('editUserConfirmPassword');
+    if (editUserPassword) editUserPassword.value = '';
+    if (editUserConfirmPassword) editUserConfirmPassword.value = '';
     
     userModal.classList.add('active');
 }
@@ -131,6 +148,9 @@ function closeModal() {
 async function handleUserUpdate() {
     if (!currentEditingUser) return;
     
+    const editUserPassword = document.getElementById('editUserPassword');
+    const editUserConfirmPassword = document.getElementById('editUserConfirmPassword');
+    
     const userData = {
         name: editUserName.value.trim(),
         area: editUserArea.value.trim()
@@ -139,6 +159,17 @@ async function handleUserUpdate() {
     if (!userData.name || !userData.area) {
         showToast('Preencha todos os campos obrigatórios', true);
         return;
+    }
+    
+    // Verificar se foi fornecida uma nova senha
+    if (editUserPassword.value) {
+        // Validar se as senhas coincidem
+        if (editUserPassword.value !== editUserConfirmPassword.value) {
+            showToast('As senhas não coincidem', true);
+            return;
+        }
+        // Adicionar senha ao objeto userData
+        userData.password = editUserPassword.value;
     }
     
     try {

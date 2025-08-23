@@ -58,6 +58,7 @@ db.run(`
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         area TEXT NOT NULL,
+        password TEXT NOT NULL,
         createdAt TEXT NOT NULL
     )
 `);
@@ -290,16 +291,20 @@ app.get('/api/users/:id', (req, res) => {
 
 // Criar novo usuário
 app.post('/api/users', (req, res) => {
-    const { name, area } = req.body;
+    const { name, area, password } = req.body;
     const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
     
     // Validações básicas
-    if (!name || !area) {
-        return res.status(400).json({ error: 'Nome e Área são campos obrigatórios' });
+    if (!name || !area || !password) {
+        return res.status(400).json({ error: 'Nome, Área e Senha são campos obrigatórios' });
     }
     
-    db.run('INSERT INTO users (name, area, createdAt) VALUES (?, ?, ?)',
-        [name, area, nowBR],
+    // Simples hash para a senha (em produção, usar bcrypt ou método similar)
+    const crypto = require('crypto');
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+    
+    db.run('INSERT INTO users (name, area, password, createdAt) VALUES (?, ?, ?, ?)',
+        [name, area, hashedPassword, nowBR],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.status(201).json({
@@ -307,6 +312,7 @@ app.post('/api/users', (req, res) => {
                 name,
                 area,
                 createdAt: nowBR
+                // Não retornamos a senha, mesmo hasheada
             });
         }
     );
@@ -314,26 +320,38 @@ app.post('/api/users', (req, res) => {
 
 // Atualizar usuário
 app.put('/api/users/:id', (req, res) => {
-    const { name, area } = req.body;
+    const { name, area, password } = req.body;
     const { id } = req.params;
     
     // Validações básicas
-    if (!name && !area) {
+    if (!name && !area && !password) {
         return res.status(400).json({ error: 'É necessário fornecer ao menos um campo para atualização' });
     }
     
     let sql = 'UPDATE users SET ';
     const params = [];
+    let fieldCount = 0;
     
     if (name) {
         sql += 'name = ?';
         params.push(name);
+        fieldCount++;
     }
     
     if (area) {
-        if (name) sql += ', ';
+        if (fieldCount > 0) sql += ', ';
         sql += 'area = ?';
         params.push(area);
+        fieldCount++;
+    }
+    
+    if (password) {
+        if (fieldCount > 0) sql += ', ';
+        // Hash da senha
+        const crypto = require('crypto');
+        const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+        sql += 'password = ?';
+        params.push(hashedPassword);
     }
     
     sql += ' WHERE id = ?';

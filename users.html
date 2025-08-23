@@ -42,7 +42,35 @@
                         </div>
                         <div class="form-group">
                             <label>Área/Departamento <span class="required">*</span></label>
-                            <input type="text" id="userArea" name="area" required>
+                            <select id="userArea" name="area" required>
+                                <option value="">Selecione sua área</option>
+                                <option value="Recursos Humanos">Recursos Humanos</option>
+                                <option value="TI - Sistema">TI - Sistema</option>
+                                <option value="TI - Infraestrutura">TI - Infraestrutura</option>
+                                <option value="Financeiro">Financeiro</option>
+                                <option value="Comercial">Comercial</option>
+                                <option value="PCP">PCP</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Faturamento">Faturamento</option>
+                                <option value="Diretoria">Diretoria</option>
+                                <option value="Departamento Pessoal">Departamento pessoal</option>
+                                <option value="Manutenção - Predial">Manutentção - Predial</option>
+                                <option value="Manutenção - Veículos">Manutentção - Veículos</option>
+                                <option value="Logística">Logística</option>
+                                <option value="Suprimentos">Suprimentos</option>
+                                <option value="Qualidade">Qualidade</option>
+                                <option value="Desenvolvimento">Desenvolvimento</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Senha <span class="required">*</span></label>
+                            <input type="password" id="userPassword" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Senha <span class="required">*</span></label>
+                            <input type="password" id="userConfirmPassword" name="confirmPassword" required>
                         </div>
                     </div>
                     <button type="submit" class="submit-btn">
@@ -80,7 +108,35 @@
                         </div>
                         <div>
                             <label>Área/Departamento</label>
-                            <input type="text" id="editUserArea" required>
+                            <select id="editUserArea" required>
+                                <option value="">Selecione sua área</option>
+                                <option value="Recursos Humanos">Recursos Humanos</option>
+                                <option value="TI - Sistema">TI - Sistema</option>
+                                <option value="TI - Infraestrutura">TI - Infraestrutura</option>
+                                <option value="Financeiro">Financeiro</option>
+                                <option value="Comercial">Comercial</option>
+                                <option value="PCP">PCP</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Faturamento">Faturamento</option>
+                                <option value="Diretoria">Diretoria</option>
+                                <option value="Departamento Pessoal">Departamento pessoal</option>
+                                <option value="Manutenção - Predial">Manutentção - Predial</option>
+                                <option value="Manutenção - Veículos">Manutentção - Veículos</option>
+                                <option value="Logística">Logística</option>
+                                <option value="Suprimentos">Suprimentos</option>
+                                <option value="Qualidade">Qualidade</option>
+                                <option value="Desenvolvimento">Desenvolvimento</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-row">
+                        <div>
+                            <label>Nova Senha (deixe em branco para manter a atual)</label>
+                            <input type="password" id="editUserPassword">
+                        </div>
+                        <div>
+                            <label>Confirmar Senha</label>
+                            <input type="password" id="editUserConfirmPassword">
                         </div>
                     </div>
                 </div>
