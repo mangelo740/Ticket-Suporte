@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,14 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body class="dark-mode">
     <div class="container">
         <!-- Botões de Navegação -->
         <div class="admin-button-container">
-            <button id="adminBtn" class="admin-btn" onclick="window.location.href='admin.html'">
-                <i class="fas fa-cog"></i>
-                Painel Admin
-            </button>
-            <button id="usersBtn" class="admin-btn" onclick="window.location.href='users.html'">
-                <i class="fas fa-users"></i>
-                Usuários
+            <button onclick="window.location.href='admin.html'" class="back-btn">
+                <i class="fas fa-ticket-alt"></i>
+                Chamados
             </button>
         </div>
 
@@ -38,7 +36,8 @@
                         </div>
                         <div class="form-group">
                             <label for="lastName">Sobrenome <span class="required">*</span></label>
-                            <input type="text" id="lastName" name="lastName" placeholder="Digite seu sobrenome" required>
+                            <input type="text" id="lastName" name="lastName" placeholder="Digite seu sobrenome"
+                                required>
                         </div>
                     </div>
 
@@ -93,20 +92,23 @@
                     <!-- Assunto -->
                     <div class="form-group">
                         <label for="subject">Assunto <span class="required">*</span></label>
-                        <input type="text" id="subject" name="subject" placeholder="Digite o assunto do chamado" required>
+                        <input type="text" id="subject" name="subject" placeholder="Digite o assunto do chamado"
+                            required>
                     </div>
 
                     <!-- Descrição -->
                     <div class="form-group">
                         <label for="description">Descrição do Chamado <span class="required">*</span></label>
-                        <textarea id="description" name="description" placeholder="Descreva detalhadamente o problema ou solicitação..." required></textarea>
+                        <textarea id="description" name="description"
+                            placeholder="Descreva detalhadamente o problema ou solicitação..." required></textarea>
                     </div>
 
                     <!-- Upload de Arquivos -->
                     <div class="form-group">
                         <label>Anexar Arquivos/Fotos</label>
                         <div class="file-upload-area" id="fileUploadArea">
-                            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.txt" style="display: none;">
+                            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.txt"
+                                style="display: none;">
                             <div class="upload-content">
                                 <i class="fas fa-upload"></i>
                                 <p>Clique para selecionar arquivos ou fotos</p>
@@ -119,7 +121,8 @@
                     <!-- Contato Opcional -->
                     <div class="form-group">
                         <label for="contact">Telefone/Contato (Opcional)</label>
-                        <input type="text" id="contact" name="contact" placeholder="(85) 99999-9999 ou email@exemplo.com">
+                        <input type="text" id="contact" name="contact"
+                            placeholder="(85) 99999-9999 ou email@exemplo.com">
                     </div>
 
                     <!-- Botão de Envio -->
@@ -137,9 +140,13 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
     <div id="dbStatus" style="position:fixed;top:10px;right:10px;z-index:2000;">
-        <span id="dbStatusIcon" style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
+        <button onclick="window.location.href='users.html'" style="background: none; border: none;">
+            <span id="dbStatusIcon"
+                style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
+        </button>
     </div>
     <script src="database.api.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
