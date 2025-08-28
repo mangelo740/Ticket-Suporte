@@ -91,7 +91,7 @@ async function handleUserSubmit(e) {
     const confirmPasswordInput = document.getElementById('userConfirmPassword');
     
     const userData = {
-        name: nameInput.value.trim(),
+        name: nameInput.value.trim().toUpperCase(),
         area: areaInput.value.trim(),
         password: passwordInput.value
     };
@@ -152,7 +152,7 @@ async function handleUserUpdate() {
     const editUserConfirmPassword = document.getElementById('editUserConfirmPassword');
     
     const userData = {
-        name: editUserName.value.trim(),
+        name: editUserName.value.trim().toUpperCase(),
         area: editUserArea.value.trim()
     };
     

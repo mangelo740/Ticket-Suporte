@@ -329,7 +329,7 @@ function renderModalContent() {
                         <label>Nome:</label>
                         <input type="text" value="${ticket.firstName}" disabled>
                     </div>
-                    <div>
+                    <div style="display: none;">
                         <label>Sobrenome:</label>
                         <input type="text" value="${ticket.lastName}" disabled>
                     </div>
@@ -628,9 +628,8 @@ async function addAnnotation(ticketId) {
     }
     
     try {
-        // Usuário simulado - em um sistema real, seria obtido do login
-        const user = 'Admin';
-        
+        // Pega o usuário logado do localStorage
+        const user = localStorage.getItem('loggedUser') || 'Admin';
         // Chamar API para adicionar anotação
         await window.ticketDB.addAnnotation(ticketId, text, user);
         
@@ -707,7 +706,8 @@ async function uploadFileToTicket(ticketId) {
             showToast('Enviando arquivo...', 'info');
             
             // Fazer upload do arquivo
-            await window.ticketDB.uploadFile(ticketId, file);
+            const loggedUser = localStorage.getItem('loggedUser') || 'Sistema';
+            await window.ticketDB.uploadFile(ticketId, file, loggedUser);
             
             // Recarregar ticket e atualizar modal
             const updatedTicket = await window.ticketDB.getTicketById(ticketId);

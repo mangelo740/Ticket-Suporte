@@ -1,5 +1,31 @@
 // Gerenciamento do formulário principal
+// Redireciona para login se não estiver autenticado
+if (!localStorage.getItem('isLoggedIn')) {
+    window.location.href = 'login.html';
+}
 document.addEventListener('DOMContentLoaded', function() {
+    // Preencher campos com dados do usuário logado
+    async function preencherCamposUsuario() {
+        const loggedUser = localStorage.getItem('loggedUser');
+        const loggedUserArea = localStorage.getItem('loggedUserArea');
+        if (loggedUser) {
+            try {
+                const users = await window.ticketDB.getAllUsers();
+                const user = users.find(u => u.name === loggedUser);
+                const firstNameInput = document.getElementById('firstName');
+                const departmentSelect = document.getElementById('department');
+                if (firstNameInput) firstNameInput.value = user ? user.name : loggedUser;
+                if (departmentSelect) departmentSelect.value = user ? user.area : (loggedUserArea || '');
+            } catch {
+                // fallback localStorage
+                const firstNameInput = document.getElementById('firstName');
+                const departmentSelect = document.getElementById('department');
+                if (firstNameInput) firstNameInput.value = loggedUser;
+                if (departmentSelect) departmentSelect.value = loggedUserArea || '';
+            }
+        }
+    }
+    setTimeout(preencherCamposUsuario, 0);
     const form = document.getElementById('ticketForm');
     const fileInput = document.getElementById('fileInput');
     const fileUploadArea = document.getElementById('fileUploadArea');
@@ -93,15 +119,16 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         // Validar campos obrigatórios
-        const firstName = document.getElementById('firstName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        const department = document.getElementById('department').value;
-        const destinationArea = document.getElementById('destinationArea').value;
-        const subject = document.getElementById('subject').value.trim(); // NOVO
-        const description = document.getElementById('description').value.trim();
-        const contact = document.getElementById('contact').value.trim();
+    const firstName = document.getElementById('firstName').value.trim();
+    const priority = document.getElementById('priority').value;
+    const department = document.getElementById('department').value;
+    const destinationArea = document.getElementById('destinationArea').value;
+    const subject = document.getElementById('subject').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const contact = document.getElementById('contact').value.trim();
+    const loggedUser = localStorage.getItem('loggedUser') || 'ANÔNIMO';
 
-        if (!firstName || !lastName || !department || !destinationArea || !subject || !description) {
+        if (!firstName || !priority || !department || !destinationArea || !subject || !description) {
             showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
             return;
         }
@@ -115,23 +142,25 @@ document.addEventListener('DOMContentLoaded', function() {
             // Criar ticket via API
             const ticketData = {
                 firstName,
-                lastName,
+                priority,
                 department,
                 destinationArea,
                 subject,
                 description,
-                contact
-                // NÃO envie files aqui!
+                contact,
+                createdBy: loggedUser
             };
 
             const result = await ticketDB.createTicket(ticketData);
 
             // Enviar arquivos para o servidor
+            const localIp = window.location.hostname;
             for (const arquivo of selectedFiles) {
                 const formData = new FormData();
-                formData.append('file', arquivo.file); // Use arquivo.file!
+                formData.append('file', arquivo.file);
+                formData.append('user', loggedUser);
 
-                await fetch(`http://10.3.0.133:3001/api/tickets/${result.id}/attachments`, {
+                await fetch(`http://${localIp}:3001/api/tickets/${result.id}/attachments`, {
                     method: 'POST',
                     body: formData
                 });

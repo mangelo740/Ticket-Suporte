@@ -121,7 +121,7 @@ app.put('/api/tickets/:id', (req, res) => {
 
     // Lista de campos válidos conforme sua tabela
     const validFields = [
-        'firstName', 'lastName', 'status', 'priority',
+        'firstName', 'status', 'priority',
         'department', 'destinationArea', 'subject',
         'description', 'notes', 'contact'
     ];
@@ -200,8 +200,8 @@ app.post('/api/tickets/:id/attachments', upload.single('file'), (req, res) => {
             // Criar uma anotação sobre o upload de arquivo
             const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
             const text = `Arquivo anexado: ${originalName}`;
-            const user = "Sistema";
-            
+            let user = req.body.user || "Sistema";
+
             db.run('INSERT INTO annotations (ticketId, text, user, createdAt) VALUES (?, ?, ?, ?)', 
                 [ticketId, text, user, nowBR], 
                 (err) => {

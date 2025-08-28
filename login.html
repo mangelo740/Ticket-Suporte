@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Chamados</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        
+        img {
+            max-width: 250px;
+            height: auto;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #909090 0%, #cba43b 100%);
+            color: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            background: var(--card-bg, black);
+            border-radius: 12px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-logo {
+            width: 120px;
+            margin-bottom: 24px;
+        }
+        .login-title {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: var(--primary, #fff);
+        }
+        .login-form {
+            width: 100%;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            color: var(--primary, #fff);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            background: #111;
+            color: #fff;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent, #007bff);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover {
+            background: #0056b3;
+        }
+        @media (max-width: 600px) {
+            body.dark-mode {
+                padding: 0;
+                display: flex;
+                margin-top: -14%;
+            }
+            .login-container {
+                margin: 0 30px;
+                padding: 30px 20px;
+            }
+            .login-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="login-container">
+        <img src="/img/logo-plasticos-lummar_brnc.png" alt="Logo da Empresa" class="login-logo">
+        <div class="login-title">Bem-vindo!</div>
+        <p style="color:#aaa;margin-bottom:24px;text-align:center;">Acesse o sistema de chamados</p>
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+            </div>
+            <button type="submit" class="submit-btn">
+                <span id="loginText">Entrar</span>
+                <i id="loginLoader" class="fas fa-spinner fa-spin" style="display:none;"></i>
+            </button>
+        </form>
+        <div id="loginToast" class="toast" style="margin-top:16px;"></div>
+    </div>
+    <script src="database.api.js"></script>
+    <script src="login.js"></script>
+</body>
+</html>

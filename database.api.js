@@ -78,15 +78,14 @@ class TicketDatabaseAPI {
     }
     
     // Método para upload de arquivos
-    async uploadFile(ticketId, file) {
+    async uploadFile(ticketId, file, user) {
         const formData = new FormData();
         formData.append('file', file);
-        
+        if (user) formData.append('user', user);
         const res = await fetch(`${API_URL}/${ticketId}/attachments`, {
             method: 'POST',
             body: formData
         });
-        
         if (!res.ok) throw new Error('Erro ao fazer upload do arquivo');
         return await res.json();
     }
