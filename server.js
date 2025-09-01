@@ -85,15 +85,31 @@ app.post('/api/tickets', (req, res) => {
     const t = req.body;
     const nowBR = dayjs().tz('America/Sao_Paulo').format('YYYY-MM-DD HH:mm:ss');
 
+    // Primeiro insere sem ticketNumber
     db.run(`
         INSERT INTO tickets (
-            ticketNumber, firstName, lastName, department, destinationArea, subject, description, contact, status, priority, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            firstName, priority, department, destinationArea, subject, description, contact, status, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-        t.ticketNumber, t.firstName, t.lastName, t.department, t.destinationArea, t.subject, t.description, t.contact, t.status || 'Aberto', t.priority || 'Média', nowBR, nowBR
+        t.firstName,
+        t.priority || 'Média',
+        t.department,
+        t.destinationArea,
+        t.subject,
+        t.description,
+        t.contact,
+        t.status || 'Aberto',
+        nowBR,
+        nowBR
     ], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ id: this.lastID, ticketNumber: t.ticketNumber });
+        const id = this.lastID;
+        const ticketNumber = 'TK' + String(id).padStart(4, '0');
+        // Atualiza ticketNumber
+        db.run('UPDATE tickets SET ticketNumber = ? WHERE id = ?', [ticketNumber, id], (err2) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            res.json({ id, ticketNumber });
+        });
     });
 });
 
@@ -377,5 +393,6 @@ app.delete('/api/users/:id', (req, res) => {
     });
 });
 
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.listen(3001, () => console.log('API rodando em http://localhost:3001'));
+app.listen(3001, () => console.log(`API rodando em http://localhost:3001`));

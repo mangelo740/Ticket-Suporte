@@ -8,7 +8,7 @@ class TicketDatabaseAPI {
         // Gera ticketNumber (simples, pode ser melhorado no backend)
         ticketData.ticketNumber = 'TK' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
         ticketData.status = 'Aberto';
-        ticketData.priority = 'Média';
+        // Não sobrescreve prioridade, deixa vir do formulário
         const res = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

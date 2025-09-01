@@ -140,7 +140,13 @@ function renderRecentTickets() {
             <div class="ticket-header">
                 <div class="ticket-info">
                     <h3>${ticket.ticketNumber}</h3>
-                    <p><strong>${ticket.firstName} ${ticket.lastName}</strong> - ${ticket.department}</p>
+                    <p>
+                        <strong>
+                            Solicitante: ${ticket.firstName} <br>
+                        </strong>
+                        <strong>
+                         De: ${ticket.department}</strong>
+                    </p>
                     <p>${ticket.destinationArea}</p>
                     <p style="color: #9ca3af; font-size: 0.75rem;">${createdDate} às ${createdTime}</p>
                 </div>
@@ -329,10 +335,6 @@ function renderModalContent() {
                         <label>Nome:</label>
                         <input type="text" value="${ticket.firstName}" disabled>
                     </div>
-                    <div style="display: none;">
-                        <label>Sobrenome:</label>
-                        <input type="text" value="${ticket.lastName}" disabled>
-                    </div>
                     <div>
                         <label>Status:</label>
                         <select id="modalStatus" onchange="updateTicketField('status', this.value, event)" disabled>
@@ -409,10 +411,6 @@ function renderModalContent() {
                     <div>
                         <label>Nome:</label>
                         <input type="text" id="editFirstName" value="${ticket.firstName}">
-                    </div>
-                    <div>
-                        <label>Sobrenome:</label>
-                        <input type="text" id="editLastName" value="${ticket.lastName}">
                     </div>
                     <div>
                         <label>Status:</label>

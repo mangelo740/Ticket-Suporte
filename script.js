@@ -197,5 +197,5 @@ function showToast(message, type = 'success') {
     
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3000);
+    }, 6000);
 }
