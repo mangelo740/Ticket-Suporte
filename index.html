@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Abertura de Chamados</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
         if (!localStorage.getItem('isLoggedIn')) {
-            window.location.href = 'login.html';
+            window.location.href = '/public/login.html';
         }
     </script>
 </head>
@@ -18,7 +18,7 @@
     <div class="container">
         <!-- Botões de Navegação -->
         <div class="admin-button-container">
-            <button onclick="window.location.href='admin.html'" class="back-btn">
+            <button onclick="window.location.href='/public/admin.html'" class="back-btn">
                 <i class="fas fa-ticket-alt"></i>
                 Chamados
             </button>
@@ -150,13 +150,13 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
     <div id="dbStatus" style="position:fixed;top:10px;right:10px;z-index:2000;">
-        <button onclick="window.location.href='users.html'" style="background: none; border: none;">
+        <button onclick="window.location.href='/public/users.html'" style="background: none; border: none;">
             <span id="dbStatusIcon"
                 style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
         </button>
     </div>
-    <script src="database.api.js"></script>
-    <script src="script.js"></script>
+    <script src="/public/js/database.api.js"></script>
+    <script src="/public/js/script.js"></script>
 </body>
 
 </html>
