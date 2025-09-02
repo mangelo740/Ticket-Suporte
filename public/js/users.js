@@ -90,13 +90,15 @@ async function handleUserSubmit(e) {
     const passwordInput = document.getElementById('userPassword');
     const confirmPasswordInput = document.getElementById('userConfirmPassword');
     
+    const whatsappInput = document.getElementById('userWhatsapp');
     const userData = {
         name: nameInput.value.trim().toUpperCase(),
         area: areaInput.value.trim(),
-        password: passwordInput.value
+        password: passwordInput.value,
+        whatsapp: whatsappInput.value.trim()
     };
     
-    if (!userData.name || !userData.area || !userData.password) {
+    if (!userData.name || !userData.area || !userData.whatsapp|| !userData.password) {
         showToast('Preencha todos os campos obrigatórios', true);
         return;
     }
@@ -114,6 +116,7 @@ async function handleUserSubmit(e) {
         // Reset form and reload users
         nameInput.value = '';
         areaInput.value = '';
+        whatsappInput.value = '';
         passwordInput.value = '';
         confirmPasswordInput.value = '';
         loadUsers();

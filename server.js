@@ -319,14 +319,15 @@ app.post('/api/users', (req, res) => {
     const crypto = require('crypto');
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
     
-    db.run('INSERT INTO users (name, area, password, createdAt) VALUES (?, ?, ?, ?)',
-        [name, area, hashedPassword, nowBR],
+    db.run('INSERT INTO users (name, area, password, whatsapp, createdAt) VALUES (?, ?, ?, ?, ?)',
+        [name, area, hashedPassword, req.body.whatsapp, nowBR],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.status(201).json({
                 id: this.lastID,
                 name,
                 area,
+                whatsapp: req.body.whatsapp,
                 createdAt: nowBR
                 // Não retornamos a senha, mesmo hasheada
             });
