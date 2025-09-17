@@ -2,8 +2,51 @@
 const localIp = window.location.hostname;
 const API_URL = `http://${localIp}:3001/api/tickets`;
 const USERS_API_URL = `http://${localIp}:3001/api/users`;
+const DEPARTMENTS_API_URL = `http://${localIp}:3001/api/departments`;
 
 class TicketDatabaseAPI {
+    // --- DEPARTMENTS API ---
+    async getAllDepartments() {
+        const localIp = window.location.hostname;
+        const DEPARTMENTS_API_URL = `http://${localIp}:3001/api/departments`;
+        const res = await fetch(DEPARTMENTS_API_URL);
+        if (!res.ok) throw new Error('Erro ao buscar departamentos');
+        return await res.json();
+    }
+
+    async createDepartment(departmentData) {
+        const localIp = window.location.hostname;
+        const DEPARTMENTS_API_URL = `http://${localIp}:3001/api/departments`;
+        const res = await fetch(DEPARTMENTS_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(departmentData)
+        });
+        if (!res.ok) throw new Error('Erro ao criar departamento');
+        return await res.json();
+    }
+
+    async updateDepartment(id, data) {
+        const localIp = window.location.hostname;
+        const DEPARTMENTS_API_URL = `http://${localIp}:3001/api/departments/${id}`;
+        const res = await fetch(DEPARTMENTS_API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Erro ao atualizar departamento');
+        return await res.json();
+    }
+
+    async deleteDepartment(id) {
+        const localIp = window.location.hostname;
+        const DEPARTMENTS_API_URL = `http://${localIp}:3001/api/departments/${id}`;
+        const res = await fetch(DEPARTMENTS_API_URL, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Erro ao deletar departamento');
+        return await res.json();
+    }
+
+    // --- TICKETS API ---
     async createTicket(ticketData) {
         // Gera ticketNumber (simples, pode ser melhorado no backend)
         ticketData.ticketNumber = 'TK' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');

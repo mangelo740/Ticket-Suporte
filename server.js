@@ -40,6 +40,69 @@ db.run(`
     )
 `);
 
+// Tabela de departamentos
+db.run(`
+    CREATE TABLE IF NOT EXISTS department (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        critico INTEGER,
+        alto INTEGER,
+        media INTEGER,
+        baixa INTEGER,
+        createdAt TEXT,
+        updatedAt TEXT
+    )
+`);
+// Rotas de departamentos
+
+// Listar departamentos
+app.get('/api/departments', (req, res) => {
+    db.all('SELECT * FROM department ORDER BY name', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Adicionar departamento
+app.post('/api/departments', (req, res) => {
+    const { name, critico, alto, media, baixa } = req.body;
+    if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+    const now = new Date().toISOString();
+    db.run(
+        'INSERT INTO department (name, critico, alto, media, baixa, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [name, critico, alto, media, baixa, now, now],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, name, critico, alto, media, baixa, createdAt: now, updatedAt: now });
+        }
+    );
+});
+
+// Editar departamento
+app.put('/api/departments/:id', (req, res) => {
+    const { name, critico, alto, media, baixa } = req.body;
+    const id = req.params.id;
+    if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+    const now = new Date().toISOString();
+    db.run(
+        'UPDATE department SET name = ?, critico = ?, alto = ?, media = ?, baixa = ?, updatedAt = ? WHERE id = ?',
+        [name, critico, alto, media, baixa, now, id],
+        function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id, name, critico, alto, media, baixa, updatedAt: now });
+        }
+    );
+});
+
+// Excluir departamento
+app.delete('/api/departments/:id', (req, res) => {
+    const id = req.params.id;
+    db.run('DELETE FROM department WHERE id = ?', [id], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true });
+    });
+});
+
 // Criar tabela de anotações
 db.run(`
     CREATE TABLE IF NOT EXISTS annotations (

@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loginToast.style.background = '#28a745';
             loginToast.style.display = 'block';
             setTimeout(function () {
-                window.location.href = '/index.html';
+                window.location.href = '/public/index.html';
             }, 800);
         } catch (err) {
             loginToast.textContent = 'Erro ao autenticar.';

@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Departamentos - Sistema de Chamados</title>
+    <link rel="stylesheet" href="/public/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="dark-mode">
+    <div class="container">
+
+        <!-- TESTE VISUAL DE DEPARTAMENTOS -->
+        <div id="departmentsTest" style="display: none; background:#222;padding:1rem;margin-bottom:1rem;color:#fff;border-radius:8px;">
+            <h3>Teste Visual de Departamentos</h3>
+            <button onclick="loadDepartments()" style="margin-bottom:8px;">Testar API Departamentos</button>
+            <div id="departmentsTestResult"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="header-content">
+                <h1>Gerenciamento de Departamentos</h1>
+                <p>Cadastro e gerenciamento dos setores da empresa</p>
+            </div>
+            <div class="navigation-buttons">
+                <button onclick="window.location.href='/public/index.html'" class="back-btn">
+                    <i class="fas fa-home"></i>
+                    Início
+                </button>
+                <button onclick="window.location.href='/public/users.html'" class="back-btn">
+                    <i class="fas fa-users"></i>
+                    Usuários
+                </button>
+            </div>
+        </div>
+
+        <!-- Department Management Interface -->
+        <div class="form-card">
+            <div class="form-header">
+                <h1>Novo Departamento</h1>
+                <p>Preencha o campo abaixo para adicionar um novo departamento/setor</p>
+            </div>
+            <div class="form-content">
+                <form id="departmentForm">
+                    <div class="form-row">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label>Nome do Departamento <span class="required">*</span></label>
+                            <input type="text" id="departmentName" name="name" required style="display: flex; width: 100%;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="display: flex; gap: 0.5rem; width: 205%; flex-wrap: wrap;">
+                            <div style="display: flex; justify-content:space-between; align-items: flex-end; gap: 1rem; width: 100%;">
+                                <div style="flex:1; text-align:center;">
+                                    <label style="font-size:0.95rem;">Crítico</label>
+                                    <input type="number" id="departmentCritico" name="critico" min="1" required style="width:100%; text-align:center;">
+                                </div>
+                                <div style="flex:1; text-align:center;">
+                                    <label style="font-size:0.95rem;">Alto</label>
+                                    <input type="number" id="departmentAlto" name="alto" min="1" required style="width:100%; text-align:center;">
+                                </div>
+                                <div style="flex:1; text-align:center;">
+                                    <label style="font-size:0.95rem;">Média</label>
+                                    <input type="number" id="departmentMedia" name="media" min="1" required style="width:100%; text-align:center;">
+                                </div>
+                                <div style="flex:1; text-align:center;">
+                                    <label style="font-size:0.95rem;">Baixa</label>
+                                    <input type="number" id="departmentBaixa" name="baixa" min="1" required style="width:100%; text-align:center;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Departamento
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Departments List -->
+        <div class="tickets-card" style="margin-top: 2rem;">
+            <h2 style="padding: 1.5rem 1.5rem 0; font-size: 1.25rem; font-weight: 600; color: #fff;">Departamentos Cadastrados</h2>
+            <div id="departmentsList" class="tickets-list">
+                <!-- Department items will be added dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <!-- Modal de Edição de Departamento -->
+    <div id="departmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Departamento</h2>
+                <button class="modal-close" id="closeModalBtn" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-fields">
+                    <div class="modal-row">
+                        <div>
+                            <label>Nome do Departamento</label>
+                            <input type="text" id="editDepartmentName" required>
+                            <div style="flex:1; text-align:center;">
+                                <label style="font-size:0.95rem;">Crítico</label>
+                                <input type="number" id="departmentCritico" name="critico" min="1" required style="width:100%; text-align:center;">
+                            </div>
+                            <div style="flex:1; text-align:center;">
+                                <label style="font-size:0.95rem;">Alto</label>
+                                <input type="number" id="departmentAlto" name="alto" min="1" required style="width:100%; text-align:center;">
+                            </div>
+                            <div style="flex:1; text-align:center;">
+                                <label style="font-size:0.95rem;">Média</label>
+                                <input type="number" id="departmentMedia" name="media" min="1" required style="width:100%; text-align:center;">
+                            </div>
+                            <div style="flex:1; text-align:center;">
+                                <label style="font-size:0.95rem;">Baixa</label>
+                                <input type="number" id="departmentBaixa" name="baixa" min="1" required style="width:100%; text-align:center;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="save-btn" id="saveDepartmentBtn">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                    <button type="button" class="close-btn" id="cancelDepartmentBtn">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <script src="/public/js/database.api.js"></script>
+    <script src="/public/js/departments.js"></script>
+</body>
+</html>
