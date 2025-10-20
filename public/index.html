@@ -125,50 +125,9 @@
                 style="display:inline-block;width:16px;height:16px;border-radius:50%;vertical-align:middle;"></span>
         </button>
     </div>
+    
     <script src="/public/js/database.api.js"></script>
-    <script>
-    // Preenche selects de departamento com dados da API
-    async function preencherDepartamentos() {
-        try {
-            const departamentos = await window.ticketDB.getAllDepartments();
-            const selectDept = document.getElementById('department');
-            const selectDest = document.getElementById('destinationArea');
-            if (selectDept) {
-                selectDept.innerHTML = '<option value="">Selecione o departamento</option>';
-                departamentos.forEach(dep => {
-                    selectDept.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
-                });
-            }
-            if (selectDest) {
-                selectDest.innerHTML = '<option value="">Selecione o departamento</option>';
-                departamentos.forEach(dep => {
-                    selectDest.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
-                });
-            }
-        } catch (e) {
-            console.error('Erro ao carregar departamentos:', e);
-        }
-    }
-    window.addEventListener('DOMContentLoaded', preencherDepartamentos);
-    </script>
     <script src="/public/js/script.js"></script>
-    <script>
-    // Botão para admin.html mantém parâmetro ?user=LOGIN
-    document.addEventListener('DOMContentLoaded', function() {
-        const adminBtn = document.getElementById('goAdminBtn');
-        if (adminBtn) {
-            adminBtn.onclick = function() {
-                const params = new URLSearchParams(window.location.search);
-                const user = params.get('user');
-                if (user) {
-                    window.location.href = `/public/admin.html?user=${encodeURIComponent(user)}`;
-                } else {
-                    window.location.href = '/public/admin.html';
-                }
-            };
-        }
-    });
-    </script>
 </body>
 
 </html>

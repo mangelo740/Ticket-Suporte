@@ -1,5 +1,4 @@
-# Sistema de Abertura de Chamados - Vanilla JavaScript
-
+# Sistema de Abertura de Chamados
 Sistema completo de gerenciamento de chamados desenvolvido em HTML, CSS e JavaScript puro com simulação de banco SQLite usando localStorage.
 
 ## 🚀 Funcionalidades

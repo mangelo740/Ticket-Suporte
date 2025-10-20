@@ -1,10 +1,12 @@
 // Gerenciamento do formulário principal
-// Redireciona para login se não estiver autenticado
+/* Redireciona para login se não estiver autenticado
 if (!localStorage.getItem('isLoggedIn')) {
     // Use caminho absoluto para evitar confusões entre hosts/paths quando acessado por IP
     console.debug('Redirecionando para login porque isLoggedIn não encontrado');
     window.location.href = '/public/login.html';
 }
+*/
+
 document.addEventListener('DOMContentLoaded', function() {
     // Preencher campos com dados do usuário logado
     async function preencherCamposUsuario() {
@@ -201,3 +203,43 @@ function showToast(message, type = 'success') {
         toast.classList.remove('show');
     }, 6000);
 }
+
+// Preenche selects de departamento com dados da API
+async function preencherDepartamentos() {
+    try {
+        const departamentos = await window.ticketDB.getAllDepartments();
+        const selectDept = document.getElementById('department');
+        const selectDest = document.getElementById('destinationArea');
+        if (selectDept) {
+            selectDept.innerHTML = '<option value="">Selecione o departamento</option>';
+            departamentos.forEach(dep => {
+                selectDept.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
+            });
+        }
+        if (selectDest) {
+            selectDest.innerHTML = '<option value="">Selecione o departamento</option>';
+            departamentos.forEach(dep => {
+                selectDest.innerHTML += `<option value="${dep.name}">${dep.name}</option>`;
+            });
+        }
+    } catch (e) {
+        console.error('Erro ao carregar departamentos:', e);
+    }
+}
+window.addEventListener('DOMContentLoaded', preencherDepartamentos);
+
+// Botão para admin.html mantém parâmetro ?user=LOGIN
+document.addEventListener('DOMContentLoaded', function() {
+    const adminBtn = document.getElementById('goAdminBtn');
+    if (adminBtn) {
+        adminBtn.onclick = function() {
+            const params = new URLSearchParams(window.location.search);
+            const user = params.get('user');
+            if (user) {
+                window.location.href = `/public/admin.html?user=${encodeURIComponent(user)}`;
+            } else {
+                window.location.href = '/public/admin.html';
+            }
+        };
+    }
+});

@@ -566,18 +566,20 @@ function tryOpenUrl(url) {
 
 // Start API listener (bind 0.0.0.0 to accept network connections)
 const apiServer = app.listen(PORT_API, '0.0.0.0', () => {
-    console.log(`API rodando em http://0.0.0.0:${PORT_API}`);
+    // console.log(`API rodando em http://127.0.0.1:${PORT_API}`);
 });
 
 // If PORT_SITE differs, also start listener for site (static files) so you can access via :3030
 let siteServer = null;
 if (PORT_SITE && Number(PORT_SITE) !== Number(PORT_API)) {
     siteServer = app.listen(PORT_SITE, '0.0.0.0', () => {
-        console.log(`Site rodando em http://0.0.0.0:${PORT_SITE}/public/index.html`);
+        // console.log(`Site rodando em http://127.0.0.1:${PORT_SITE}/public/login.html`);
         // Abrir a página do site localmente
-        tryOpenUrl(`http://127.0.0.1:${PORT_SITE}/public/index.html`);
+        // tryOpenUrl(`http://127.0.0.1:${PORT_SITE}/public/login.html`);
+        console.log('Site pronto para funcionamento!');
     });
 } else {
     // if ports are same, open API/site URL
-    tryOpenUrl(`http://127.0.0.1:${PORT_API}/public/index.html`);
+    // tryOpenUrl(`http://127.0.0.1:${PORT_API}/public/login.html`);
+    console.log('Site pronto para funcionamento!');
 }
