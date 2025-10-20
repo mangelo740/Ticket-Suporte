@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 let currentTickets = [];
+let allTicketsRaw = [];
 let selectedTicket = null;
 let isEditing = false;
 
@@ -35,10 +36,33 @@ function setupFilters() {
     if (priorityFilter) priorityFilter.addEventListener('change', filterTickets);
 }
 
-// Carregar todos os tickets do banco
+// Função para extrair parâmetro ?user=LOGIN da URL
+function getUserFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('user') ? params.get('user').trim().toUpperCase() : null;
+}
+
+// Função que retorna apenas os tickets que o usuário pode ver
+function getVisibleTicketsForUser() {
+    const login = getUserFromUrl();
+    if (!login) return [];
+    // Filtra por username (preferencial) ou por nome completo (fallback)
+    return allTicketsRaw.filter(ticket => {
+        // Username salvo no ticket
+        if (ticket.username) {
+            return ticket.username.trim().toUpperCase() === login;
+        }
+        // Fallback: compara nome completo
+        const nomeCompleto = ((ticket.firstName || '') + ' ' + (ticket.lastName || '')).trim().toUpperCase();
+        return nomeCompleto === login;
+    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+// Carregar todos os tickets do banco, filtrando conforme usuário logado
 async function loadTickets() {
     try {
-        currentTickets = (await window.ticketDB.getAllTickets()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        allTicketsRaw = await window.ticketDB.getAllTickets();
+        currentTickets = getVisibleTicketsForUser();
         renderDashboard();
         renderRecentTickets();
         renderTickets(currentTickets);
@@ -50,7 +74,7 @@ async function loadTickets() {
     }
 }
 
-// Renderizar lista de tickets (aba Tickets)
+// Renderizar lista de tickets (aba Tickets) - aba Chamados abertos para mim
 function renderTickets(tickets) {
     const ticketsList = document.getElementById('ticketsList');
     if (!ticketsList) return;
@@ -72,9 +96,20 @@ function renderTickets(tickets) {
         ticketDiv.innerHTML = `
             <div class="ticket-header">
                 <div class="ticket-info">
-                    <h3>${ticket.ticketNumber}</h3>
-                    <p><strong>${ticket.firstName} ${ticket.lastName}</strong> - ${ticket.department}</p>
-                    <p>${ticket.destinationArea}</p>
+                    <h3>${ticket.ticketNumber} teste</h3>
+                    <p>
+                        <strong>
+                            Solicitante: ${ticket.firstName} <br>
+                        </strong>
+                        <strong>
+                            De: ${ticket.department}
+                         </strong>
+                    </p>
+                    <p>
+                        <strong>
+                            Para: ${ticket.destinationArea}
+                        </strong>
+                    </p>
                     <p style="color: #9ca3af; font-size: 0.75rem;">${createdDate} às ${createdTime}</p>
                 </div>
                 <div class="ticket-badges">
@@ -82,7 +117,7 @@ function renderTickets(tickets) {
                     <span class="badge priority-${(ticket.priority || '').toLowerCase()}">${ticket.priority}</span>
                 </div>
             </div>
-            <p style="color: #4b5563; margin-top: 0.5rem;">${ticket.description ? ticket.description.substring(0, 100) : ''}${ticket.description && ticket.description.length > 100 ? '...' : ''}</p>
+            <p style="color: white; margin-top: 0.5rem;">${ticket.subject ? ticket.subject.substring(0, 100) : ''}${ticket.description && ticket.description.length > 100 ? '...' : ''}</p>
         `;
         ticketsList.appendChild(ticketDiv);
     });
@@ -112,18 +147,21 @@ function filterTickets() {
 
 // Dashboard - estatísticas
 function renderDashboard() {
-    document.getElementById('totalTickets').textContent = currentTickets.length;
-    document.getElementById('openTickets').textContent = currentTickets.filter(t => t.status === 'Aberto').length;
-    document.getElementById('inProgressTickets').textContent = currentTickets.filter(t => t.status === 'Em Andamento').length;
-    document.getElementById('resolvedTickets').textContent = currentTickets.filter(t => t.status === 'Resolvido').length;
+    // Sempre usa tickets filtrados
+    const tickets = getVisibleTicketsForUser();
+    document.getElementById('totalTickets').textContent = tickets.length;
+    document.getElementById('openTickets').textContent = tickets.filter(t => t.status === 'Aberto').length;
+    document.getElementById('inProgressTickets').textContent = tickets.filter(t => t.status === 'Em Andamento').length;
+    document.getElementById('resolvedTickets').textContent = tickets.filter(t => t.status === 'Resolvido').length;
 }
 
-// Tickets recentes no dashboard
+// Tickets recentes no dashboard - aba Meus chamados abertos
 function renderRecentTickets() {
     const recentTicketsList = document.getElementById('recentTicketsList');
     if (!recentTicketsList) return;
     recentTicketsList.innerHTML = '';
-    let recent = currentTickets.slice(0, 5);
+    const tickets = getVisibleTicketsForUser();
+    let recent = tickets.slice(0, 5);
     if (recent.length === 0) {
         recentTicketsList.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #6b7280;">Nenhum ticket recente</p>';
         return;
@@ -145,9 +183,17 @@ function renderRecentTickets() {
                             Solicitante: ${ticket.firstName} <br>
                         </strong>
                         <strong>
-                         De: ${ticket.department}</strong>
                     </p>
-                    <p>${ticket.destinationArea}</p>
+                    <p>
+                        <strong>
+                            De: ${ticket.department}
+                        </strong>
+                    </p>
+                    <p>
+                        <strong>
+                            Para: ${ticket.destinationArea}
+                        </strong>
+                    </p>
                     <p style="color: #9ca3af; font-size: 0.75rem;">${createdDate} às ${createdTime}</p>
                 </div>
                 <div class="ticket-badges">
@@ -155,7 +201,7 @@ function renderRecentTickets() {
                     <span class="badge priority-${(ticket.priority || '').toLowerCase()}">${ticket.priority}</span>
                 </div>
             </div>
-            <p style="color: #4b5563; margin-top: 0.5rem;">${ticket.description ? ticket.description.substring(0, 100) : ''}${ticket.description && ticket.description.length > 100 ? '...' : ''}</p>
+            <p style="color: white; margin-top: 0.5rem;">${ticket.subject ? ticket.subject.substring(0, 100) : ''}${ticket.description && ticket.description.length > 100 ? '...' : ''}</p>
         `;
         recentTicketsList.appendChild(ticketDiv);
     });
@@ -163,12 +209,13 @@ function renderRecentTickets() {
 
 // Estatísticas por status/prioridade
 function renderStats() {
+    const tickets = getVisibleTicketsForUser();
     const statusChart = document.getElementById('statusChart');
     if (statusChart) {
         statusChart.innerHTML = '';
         const statusTypes = ['Aberto', 'Em Andamento', 'Resolvido', 'Fechado'];
         statusTypes.forEach(status => {
-            const count = currentTickets.filter(t => t.status === status).length;
+            const count = tickets.filter(t => t.status === status).length;
             statusChart.innerHTML += `
                 <div class="chart-item">
                     <span>${status}</span>
@@ -183,7 +230,7 @@ function renderStats() {
         priorityChart.innerHTML = '';
         const priorityTypes = ['Crítica', 'Alta', 'Média', 'Baixa'];
         priorityTypes.forEach(priority => {
-            const count = currentTickets.filter(t => t.priority === priority).length;
+            const count = tickets.filter(t => t.priority === priority).length;
             priorityChart.innerHTML += `
                 <div class="chart-item">
                     <span>${priority}</span>
@@ -745,3 +792,19 @@ function showToast(message, type = 'success') {
     // Aumenta o tempo de exibição para 5 segundos
     setTimeout(() => { toast.classList.remove('show'); }, 5000);
 }
+
+// Botão voltar mantém parâmetro ?user=LOGIN
+document.addEventListener('DOMContentLoaded', function() {
+    const backBtn = document.getElementById('backIndexBtn');
+    if (backBtn) {
+        backBtn.onclick = function() {
+            const params = new URLSearchParams(window.location.search);
+            const user = params.get('user');
+            if (user) {
+                window.location.href = `/public/index.html?user=${encodeURIComponent(user)}`;
+            } else {
+                window.location.href = '/public/index.html';
+            }
+        };
+    }
+});

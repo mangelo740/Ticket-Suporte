@@ -16,7 +16,7 @@
                 <p>Gerenciamento de Chamados</p>
             </div>
             <div class="navigation-buttons">
-            <button onclick="window.location.href='/public/index.html'" class="back-btn">
+            <button id="backIndexBtn" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
                 Voltar
             </button>
@@ -25,8 +25,8 @@
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="showTab('dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="showTab('tickets')">Tickets</button>
+            <button class="tab-btn active" onclick="showTab('dashboard')">Meus chamados abertos</button>
+            <button class="tab-btn" onclick="showTab('tickets')">Chamados abertos para mim</button>
             <button class="tab-btn" onclick="showTab('stats')">Estatísticas</button>
         </div>
 
@@ -133,13 +133,13 @@
         <div id="stats" class="tab-content">
             <div class="stats-charts">
                 <div class="chart-card">
-                    <h3>Distribuição por Status</h3>
+                    <h3 style="color: white;">Distribuição por Status</h3>
                     <div id="statusChart" class="chart-content">
                         <!-- Dynamic content -->
                     </div>
                 </div>
                 <div class="chart-card">
-                    <h3>Distribuição por Prioridade</h3>
+                    <h3 style="color: white;">Distribuição por Prioridade</h3>
                     <div id="priorityChart" class="chart-content">
                         <!-- Dynamic content -->
                     </div>

@@ -1,7 +1,9 @@
 // Gerenciamento do formulário principal
 // Redireciona para login se não estiver autenticado
 if (!localStorage.getItem('isLoggedIn')) {
-    window.location.href = 'login.html';
+    // Use caminho absoluto para evitar confusões entre hosts/paths quando acessado por IP
+    console.debug('Redirecionando para login porque isLoggedIn não encontrado');
+    window.location.href = '/public/login.html';
 }
 document.addEventListener('DOMContentLoaded', function() {
     // Preencher campos com dados do usuário logado

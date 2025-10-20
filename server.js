@@ -8,15 +8,32 @@ require('dayjs/plugin/timezone');
 dayjs.extend(require('dayjs/plugin/utc'));
 dayjs.extend(require('dayjs/plugin/timezone'));
 
+const PORT_SITE = process.env.PORT_SITE || 3030;
+const PORT_API = process.env.PORT_API || 3001;
+
 const app = express();
 app.use(express.json({ limit: '1mb' })); // Limite pequeno para evitar uploads grandes via JSON
+
 const corsOptions = {
     origin: '*', // ou coloque o endereço do frontend, ex: 'http://10.3.0.133:5500'
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
+app.use('/public', express.static('public'));
 app.use('/uploads', express.static('uploads'));
+
+// Middleware de logging para diagnóstico de rede (mostra IP remoto e headers importantes)
+app.use((req, res, next) => {
+    const remote = req.ip || req.socket.remoteAddress || req.connection.remoteAddress;
+    console.log(`[REQ] ${new Date().toISOString()} - ${remote} - ${req.method} ${req.originalUrl} - Host: ${req.headers.host}`);
+    next();
+});
+
+// Rota de healthcheck para testes remotos
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
 // Conexão com o banco
 const db = new sqlite3.Database('./tickets.db');
@@ -53,6 +70,34 @@ db.run(`
         updatedAt TEXT
     )
 `);
+// Verifica se as colunas createdAt e updatedAt existem (caso a tabela tenha sido criada antes sem elas)
+db.all("PRAGMA table_info(department)", (err, cols) => {
+    if (err) {
+        console.error('Erro ao verificar colunas da tabela department:', err);
+        return;
+    }
+    const names = cols.map(c => c.name);
+    const tasks = [];
+    if (!names.includes('createdAt')) {
+        tasks.push(new Promise((resolve) => {
+            db.run('ALTER TABLE department ADD COLUMN createdAt TEXT', (e) => {
+                if (e) console.error('Erro ao adicionar coluna createdAt:', e);
+                else console.log('Coluna createdAt adicionada à tabela department');
+                resolve();
+            });
+        }));
+    }
+    if (!names.includes('updatedAt')) {
+        tasks.push(new Promise((resolve) => {
+            db.run('ALTER TABLE department ADD COLUMN updatedAt TEXT', (e) => {
+                if (e) console.error('Erro ao adicionar coluna updatedAt:', e);
+                else console.log('Coluna updatedAt adicionada à tabela department');
+                resolve();
+            });
+        }));
+    }
+    if (tasks.length > 0) Promise.all(tasks).then(() => console.log('Migração de colunas department finalizada'));
+});
 // Rotas de departamentos
 
 // Listar departamentos
@@ -63,16 +108,43 @@ app.get('/api/departments', (req, res) => {
     });
 });
 
+// Listar departamentos
+app.get('/api/departments', (req, res) => {
+    console.log('[GET] /api/departments');
+    db.all('SELECT * FROM department ORDER BY name', (err, rows) => {
+        if (err) {
+            console.error('Erro ao listar departamentos:', err);
+            return res.status(500).json({ error: 'Erro ao listar departamentos' });
+        }
+        res.json(rows);
+    });
+});
+
+
 // Adicionar departamento
 app.post('/api/departments', (req, res) => {
-    const { name, critico, alto, media, baixa } = req.body;
-    if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+    console.log('[POST] /api/departments - body:', req.body);
+    // Aceita tanto os campos antigos quanto os novos do frontend
+    const name = req.body.name;
+    const critico = req.body.critico ?? req.body.criticality1 ?? req.body.criticality ?? req.body.critical ?? req.body.criticality_1;
+    const alto = req.body.alto ?? req.body.criticality2 ?? req.body.criticality_2;
+    const media = req.body.media ?? req.body.criticality3 ?? req.body.criticality_3;
+    const baixa = req.body.baixa ?? req.body.criticality4 ?? req.body.criticality_4;
+    if (!name) {
+        console.warn('Tentativa de cadastro sem nome');
+        return res.status(400).json({ error: 'Nome obrigatório' });
+    }
     const now = new Date().toISOString();
+    console.log('Valores para inserção:', { name, critico, alto, media, baixa });
     db.run(
         'INSERT INTO department (name, critico, alto, media, baixa, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [name, critico, alto, media, baixa, now, now],
         function(err) {
-            if (err) return res.status(500).json({ error: err.message });
+            if (err) {
+                console.error('Erro ao inserir departamento:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            console.log('Departamento cadastrado com sucesso:', { id: this.lastID, name, critico, alto, media, baixa });
             res.json({ id: this.lastID, name, critico, alto, media, baixa, createdAt: now, updatedAt: now });
         }
     );
@@ -80,15 +152,28 @@ app.post('/api/departments', (req, res) => {
 
 // Editar departamento
 app.put('/api/departments/:id', (req, res) => {
-    const { name, critico, alto, media, baixa } = req.body;
+    console.log('[PUT] /api/departments/' + req.params.id, req.body);
     const id = req.params.id;
-    if (!name) return res.status(400).json({ error: 'Nome obrigatório' });
+    const name = req.body.name;
+    const critico = req.body.critico ?? req.body.criticality1 ?? req.body.criticality ?? req.body.critical ?? req.body.criticality_1;
+    const alto = req.body.alto ?? req.body.criticality2 ?? req.body.criticality_2;
+    const media = req.body.media ?? req.body.criticality3 ?? req.body.criticality_3;
+    const baixa = req.body.baixa ?? req.body.criticality4 ?? req.body.criticality_4;
+    if (!name) {
+        console.warn('Tentativa de edição sem nome');
+        return res.status(400).json({ error: 'Nome obrigatório' });
+    }
     const now = new Date().toISOString();
+    console.log('Valores para update:', { name, critico, alto, media, baixa });
     db.run(
         'UPDATE department SET name = ?, critico = ?, alto = ?, media = ?, baixa = ?, updatedAt = ? WHERE id = ?',
         [name, critico, alto, media, baixa, now, id],
         function(err) {
-            if (err) return res.status(500).json({ error: err.message });
+            if (err) {
+                console.error('Erro ao editar departamento:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            console.log('Departamento editado com sucesso:', { id, name, critico, alto, media, baixa });
             res.json({ id, name, critico, alto, media, baixa, updatedAt: now });
         }
     );
@@ -97,8 +182,13 @@ app.put('/api/departments/:id', (req, res) => {
 // Excluir departamento
 app.delete('/api/departments/:id', (req, res) => {
     const id = req.params.id;
+    console.log('[DELETE] /api/departments/' + id);
     db.run('DELETE FROM department WHERE id = ?', [id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error('Erro ao excluir departamento:', err);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log('Departamento excluído com sucesso:', id);
         res.json({ success: true });
     });
 });
@@ -459,4 +549,35 @@ app.delete('/api/users/:id', (req, res) => {
 
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.listen(3001, () => console.log(`API rodando em http://localhost:3001`));
+
+// Start servers: API port and optional site port
+const { exec } = require('child_process');
+
+// Helper to open URL in Windows
+function tryOpenUrl(url) {
+    try {
+        exec(`start "" "${url}"`, (error) => {
+            if (error) console.warn('Não foi possível abrir o navegador automaticamente:', error.message);
+        });
+    } catch (e) {
+        console.warn('Erro ao tentar abrir navegador automaticamente:', e && e.message ? e.message : e);
+    }
+}
+
+// Start API listener (bind 0.0.0.0 to accept network connections)
+const apiServer = app.listen(PORT_API, '0.0.0.0', () => {
+    console.log(`API rodando em http://0.0.0.0:${PORT_API}`);
+});
+
+// If PORT_SITE differs, also start listener for site (static files) so you can access via :3030
+let siteServer = null;
+if (PORT_SITE && Number(PORT_SITE) !== Number(PORT_API)) {
+    siteServer = app.listen(PORT_SITE, '0.0.0.0', () => {
+        console.log(`Site rodando em http://0.0.0.0:${PORT_SITE}/public/index.html`);
+        // Abrir a página do site localmente
+        tryOpenUrl(`http://127.0.0.1:${PORT_SITE}/public/index.html`);
+    });
+} else {
+    // if ports are same, open API/site URL
+    tryOpenUrl(`http://127.0.0.1:${PORT_API}/public/index.html`);
+}
