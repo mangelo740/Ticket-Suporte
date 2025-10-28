@@ -20,6 +20,15 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
+
+// 🚀 ROTA DE REDIRECIONAMENTO PARA A RAIZ
+app.get('/', (req, res) => {
+    console.log('[GET] / - Redirecionando para login...');
+    // Redireciona o usuário para a página de login com código 302 (Found/Temporário)
+    res.redirect('/public/login.html');
+});
+
+app.use(cors(corsOptions));
 app.use('/public', express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
@@ -100,13 +109,6 @@ db.all("PRAGMA table_info(department)", (err, cols) => {
 });
 // Rotas de departamentos
 
-// Listar departamentos
-app.get('/api/departments', (req, res) => {
-    db.all('SELECT * FROM department ORDER BY name', (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
 
 // Listar departamentos
 app.get('/api/departments', (req, res) => {
@@ -269,6 +271,24 @@ app.post('/api/tickets', (req, res) => {
 // Listar chamados
 app.get('/api/tickets', (req, res) => {
     db.all('SELECT * FROM tickets', (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar chamados por firstname (usuário)
+app.get('/api/tickets/user/:firstName', (req, res) => {
+    const firstName = req.params.firstName;
+    db.all('SELECT * FROM tickets WHERE firstName = ?', [firstName], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Listar chamados por area
+app.get('/api/tickets/area/:area', (req, res) => {
+    const area = req.params.area;
+    db.all('SELECT * FROM tickets WHERE area = ?', [area], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });

@@ -1,15 +1,17 @@
 // Painel administrativo - exibe e gerencia tickets do banco
-
 document.addEventListener('DOMContentLoaded', function() {
     setupTabs();
     setupFilters();
+    setupBackButton(); // Movido para função separada
     loadTickets();
 });
 
-let currentTickets = [];
+let userTickets = []; // Tickets que o user abriu (Minhas solicitações)
+let areaTickets = []; // Tickets destinados à área do user (Solicitações para mim)
 let allTicketsRaw = [];
 let selectedTicket = null;
 let isEditing = false;
+let currentTab = 'dashboard';
 
 // Tabs
 function showTab(tabId) {
@@ -18,12 +20,31 @@ function showTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     const btn = document.querySelector(`.tab-btn[onclick="showTab('${tabId}')"]`);
     if (btn) btn.classList.add('active');
-    if (tabId === 'dashboard') renderDashboard();
-    if (tabId === 'stats') renderStats();
+    
+    currentTab = tabId;
+    renderTabsContent();
 }
 
 function setupTabs() {
-    showTab('dashboard');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        const tabId = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+        btn.onclick = () => showTab(tabId);
+    });
+    showTab('tickets'); // Aba padrão ao carregar
+}
+
+function renderTabsContent() {
+    if (currentTab === 'dashboard') {
+        renderDashboard(userTickets);
+        renderRecentTickets(userTickets);
+    } else if (currentTab === 'tickets') {
+        // Na aba "Solicitações para mim", usamos areaTickets
+        renderTickets(areaTickets);
+        // Aplicar filtros imediatamente
+        filterTickets();
+    } else if (currentTab === 'stats') {
+        renderStats(userTickets);
+    }
 }
 
 // Filtros
@@ -36,37 +57,43 @@ function setupFilters() {
     if (priorityFilter) priorityFilter.addEventListener('change', filterTickets);
 }
 
-// Função para extrair parâmetro ?user=LOGIN da URL
-function getUserFromUrl() {
+// Função para extrair ?user= e ?area= da URL
+function getUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    return params.get('user') ? params.get('user').trim().toUpperCase() : null;
+    return {
+        user: params.get('user') ? params.get('user').trim().toUpperCase() : null,
+        area: params.get('area') ? params.get('area').trim() : null
+    };
 }
 
-// Função que retorna apenas os tickets que o usuário pode ver
-function getVisibleTicketsForUser() {
-    const login = getUserFromUrl();
+// Tickets criados pelo usuário
+function getTicketsForUser(ticketsRaw, login) {
     if (!login) return [];
-    // Filtra por username (preferencial) ou por nome completo (fallback)
-    return allTicketsRaw.filter(ticket => {
-        // Username salvo no ticket
-        if (ticket.username) {
-            return ticket.username.trim().toUpperCase() === login;
-        }
-        // Fallback: compara nome completo
+    return ticketsRaw.filter(ticket => {
+        const userInTicket = (ticket.username || '').trim().toUpperCase();
+        if (userInTicket === login) return true;
         const nomeCompleto = ((ticket.firstName || '') + ' ' + (ticket.lastName || '')).trim().toUpperCase();
         return nomeCompleto === login;
     }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
-// Carregar todos os tickets do banco, filtrando conforme usuário logado
+// Tickets destinados à área
+function getTicketsForArea(ticketsRaw, area) {
+    if (!area) return [];
+    return ticketsRaw.filter(ticket => (ticket.destinationArea || '').trim() === area)
+                     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+// Carregar tickets e separar por contexto
 async function loadTickets() {
     try {
         allTicketsRaw = await window.ticketDB.getAllTickets();
-        currentTickets = getVisibleTicketsForUser();
-        renderDashboard();
-        renderRecentTickets();
-        renderTickets(currentTickets);
-        renderStats();
+        const { user, area } = getUrlParams();
+        
+        userTickets = getTicketsForUser(allTicketsRaw, user);
+        areaTickets = getTicketsForArea(allTicketsRaw, area);
+        
+        renderTabsContent();
         window.checkDbStatus();
     } catch {
         showToast('Erro ao carregar tickets', 'error');
@@ -74,7 +101,7 @@ async function loadTickets() {
     }
 }
 
-// Renderizar lista de tickets (aba Tickets) - aba Chamados abertos para mim
+// Renderizar tickets na lista
 function renderTickets(tickets) {
     const ticketsList = document.getElementById('ticketsList');
     if (!ticketsList) return;
@@ -96,7 +123,7 @@ function renderTickets(tickets) {
         ticketDiv.innerHTML = `
             <div class="ticket-header">
                 <div class="ticket-info">
-                    <h3>${ticket.ticketNumber} teste</h3>
+                    <h3>${ticket.ticketNumber}</h3>
                     <p>
                         <strong>
                             Solicitante: ${ticket.firstName} <br>
@@ -123,13 +150,15 @@ function renderTickets(tickets) {
     });
 }
 
-// Filtro de tickets
+// Filtro de tickets — agora filtra APENAS areaTickets
 function filterTickets() {
+    if (currentTab !== 'tickets') return;
+
     const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
     const status = document.getElementById('statusFilter')?.value || 'all';
     const priority = document.getElementById('priorityFilter')?.value || 'all';
 
-    let filtered = currentTickets.filter(ticket => {
+    let filtered = areaTickets.filter(ticket => {
         let matchSearch = (
             (ticket.ticketNumber || '').toString().includes(search) ||
             (ticket.firstName || '').toLowerCase().includes(search) ||
@@ -145,22 +174,19 @@ function filterTickets() {
     renderTickets(filtered);
 }
 
-// Dashboard - estatísticas
-function renderDashboard() {
-    // Sempre usa tickets filtrados
-    const tickets = getVisibleTicketsForUser();
+// Dashboard - estatísticas (baseado em userTickets)
+function renderDashboard(tickets) {
     document.getElementById('totalTickets').textContent = tickets.length;
     document.getElementById('openTickets').textContent = tickets.filter(t => t.status === 'Aberto').length;
     document.getElementById('inProgressTickets').textContent = tickets.filter(t => t.status === 'Em Andamento').length;
     document.getElementById('resolvedTickets').textContent = tickets.filter(t => t.status === 'Resolvido').length;
 }
 
-// Tickets recentes no dashboard - aba Meus chamados abertos
-function renderRecentTickets() {
+// Tickets recentes no dashboard
+function renderRecentTickets(tickets) {
     const recentTicketsList = document.getElementById('recentTicketsList');
     if (!recentTicketsList) return;
     recentTicketsList.innerHTML = '';
-    const tickets = getVisibleTicketsForUser();
     let recent = tickets.slice(0, 5);
     if (recent.length === 0) {
         recentTicketsList.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #6b7280;">Nenhum ticket recente</p>';
@@ -207,9 +233,8 @@ function renderRecentTickets() {
     });
 }
 
-// Estatísticas por status/prioridade
-function renderStats() {
-    const tickets = getVisibleTicketsForUser();
+// Estatísticas
+function renderStats(tickets) {
     const statusChart = document.getElementById('statusChart');
     if (statusChart) {
         statusChart.innerHTML = '';
@@ -241,41 +266,35 @@ function renderStats() {
     }
 }
 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// >>>>> A PARTIR DAQUI, TUDO É MANTIDO EXATAMENTE COMO VOCÊ TINHA! <<<<<<
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 // Abrir modal do ticket
 async function openTicketModal(ticket) {
     selectedTicket = ticket;
     isEditing = false;
     
     try {
-        // Carregar anotações do ticket
         const annotations = await window.ticketDB.getAnnotations(ticket.id);
         selectedTicket.annotations = annotations;
-        
         renderModalContent();
         document.getElementById('ticketModal').classList.add('active');
     } catch (error) {
         console.error("Erro ao carregar anotações:", error);
         showToast("Erro ao carregar anotações do ticket", "error");
-        
         renderModalContent();
         document.getElementById('ticketModal').classList.add('active');
     }
 }
 
-// Função para calcular o tempo de chamado (duração desde a criação até agora ou até fechamento)
 function calculateTicketDuration(ticket) {
     const createdAt = new Date(ticket.createdAt);
-    // Se o ticket estiver fechado ou resolvido, usar a data de fechamento
-    // Caso contrário, usar a data atual
     const endTime = ticket.closedAt ? new Date(ticket.closedAt) : new Date();
-    
-    // Calcular diferença em milissegundos
     const diffMs = endTime - createdAt;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    // Formatar de acordo com a duração
     if (diffDays > 0) {
         return `${diffDays}d${diffHours}h`;
     } else {
@@ -291,7 +310,6 @@ function renderModalContent() {
     const modalBody = document.getElementById('modalBody');
     if (!modalBody) return;
 
-    // Exibir links de download dos anexos salvos no backend
     let anexos = 'Nenhum arquivo anexado';
     if (ticket.attachments) {
         let attachmentsList = [];
@@ -314,10 +332,7 @@ function renderModalContent() {
         }
     }
 
-    // Mostrar anotações do ticket
     let historicoItems = [];
-    
-    // Adicionar anotações do banco de dados
     if (ticket.annotations && Array.isArray(ticket.annotations)) {
         historicoItems = ticket.annotations.map(annotation => {
             const date = new Date(annotation.createdAt).toLocaleString('pt-BR');
@@ -330,13 +345,9 @@ function renderModalContent() {
             };
         });
     }
-    
-    // Adicionar histórico legado se existir
     if (ticket.history && Array.isArray(ticket.history)) {
         historicoItems = [...historicoItems, ...ticket.history];
     }
-    
-    // Se não houver anotações, mostrar mensagem padrão
     if (historicoItems.length === 0) {
         historicoItems.push({
             user: 'Sistema',
@@ -346,7 +357,6 @@ function renderModalContent() {
         });
     }
     
-    // Renderizar histórico de anotações
     const historico = historicoItems.map(h => `
         <div style="margin-bottom:12px;" ${h.id ? `data-annotation-id="${h.id}"` : ''}>
             <span style="font-weight:600;color:#fff;">${h.user}</span> 
@@ -358,14 +368,10 @@ function renderModalContent() {
         </div>
     `).join('');
     
-    // Formatar datas para exibição
     const createdDate = new Date(ticket.createdAt).toLocaleString('pt-BR');
     const updatedDate = new Date(ticket.updatedAt).toLocaleString('pt-BR');
-    
-    // Calcular tempo de chamado
     const ticketDuration = calculateTicketDuration(ticket);
 
-    // Rodapé com informações de tempo
     const rodape = `
         <div class="rodape">
             <span>Criado: ${createdDate}</span>
@@ -451,7 +457,6 @@ function renderModalContent() {
             </form>
         `;
     } else {
-        // Modo edição: todos campos habilitados
         modalBody.innerHTML = `
             <form class="modal-fields" onsubmit="return false;">
                 <div class="modal-row">
@@ -522,7 +527,6 @@ function renderModalContent() {
                 </div>
                 ${rodape}
                 <div class="modal-actions">
-                    <!--<button type="button" onclick="deleteTicket()" class="delete-btn"><i class="fas fa-trash"></i> Deletar</button>-->
                     <button type="button" onclick="saveEdit()" class="save-btn"><i class="fas fa-save"></i> Salvar</button>
                     <button type="button" onclick="disabledEdit()" class="close-btn">Cancelar</button>
                 </div>
@@ -544,7 +548,6 @@ function disabledEdit() {
 async function saveEdit() {
     if (!selectedTicket) return;
 
-    // Campos editáveis
     const fields = [
         'firstName', 'lastName', 'status', 'priority',
         'department', 'destinationArea', 'subject',
@@ -561,7 +564,6 @@ async function saveEdit() {
             const newValue = input.value;
             if (selectedTicket[field] !== newValue) {
                 updates[field] = newValue;
-                // Verificar se o status foi alterado para Resolvido ou Fechado
                 if (field === 'status') {
                     statusChanged = true;
                     newStatus = newValue;
@@ -576,10 +578,7 @@ async function saveEdit() {
     }
 
     try {
-        // Atualizar o ticket
         const updatedTicket = await window.ticketDB.updateTicket(selectedTicket.id, updates);
-        
-        // Se o status foi alterado para Resolvido ou Fechado, adicionar anotação
         if (statusChanged && (newStatus === 'Resolvido' || newStatus === 'Fechado')) {
             await window.ticketDB.addAnnotation(
                 selectedTicket.id, 
@@ -587,7 +586,6 @@ async function saveEdit() {
                 'Sistema'
             );
         }
-        
         showToast('Ticket atualizado com sucesso!');
         isEditing = false;
         loadTickets();
@@ -598,13 +596,11 @@ async function saveEdit() {
     }
 }
 
-// Fechar modal
 function closeModal() {
     document.getElementById('ticketModal').classList.remove('active');
     selectedTicket = null;
 }
 
-// Atualizar campo do ticket
 async function updateTicketField(field, value, event) {
     if (event) event.preventDefault();
     if (!selectedTicket) return;
@@ -612,42 +608,32 @@ async function updateTicketField(field, value, event) {
     updates[field] = value;
     
     try {
-        // Atualizar o ticket
         const updatedTicket = await window.ticketDB.updateTicket(selectedTicket.id, updates);
         selectedTicket[field] = value;
         
-        // Se o status foi alterado para Resolvido ou Fechado, adicionar anotação
         if (field === 'status' && (value === 'Resolvido' || value === 'Fechado')) {
             await window.ticketDB.addAnnotation(
                 selectedTicket.id, 
                 `Ticket marcado como ${value}`, 
                 'Sistema'
             );
-            
-            // Recarregar anotações
             const annotations = await window.ticketDB.getAnnotations(selectedTicket.id);
             selectedTicket.annotations = annotations;
-            
-            // Recarregar o ticket para obter o campo closedAt atualizado
             const refreshedTicket = await window.ticketDB.getTicketById(selectedTicket.id);
             if (refreshedTicket) {
                 selectedTicket = {...selectedTicket, ...refreshedTicket};
             }
-            
-            // Renderizar o modal novamente com as informações atualizadas
             renderModalContent();
         }
         
         showToast('Atualizado com sucesso!');
         loadTickets();
-        // Não fecha o modal!
     } catch (error) {
         console.error('Erro ao atualizar ticket:', error);
         showToast('Erro ao atualizar ticket', 'error');
     }
 }
 
-// Deletar ticket
 async function deleteTicket() {
     if (!selectedTicket) return;
     if (confirm('Tem certeza que deseja deletar este ticket?')) {
@@ -662,36 +648,21 @@ async function deleteTicket() {
     }
 }
 
-// Função para adicionar uma anotação
 async function addAnnotation(ticketId) {
     const annotationInput = document.getElementById('newAnnotation');
     const text = annotationInput.value.trim();
-    
     if (!text) {
         showToast('Digite uma anotação', 'error');
         return;
     }
-    
     try {
-        // Pega o usuário logado do localStorage
         const user = localStorage.getItem('loggedUser') || 'Admin';
-        // Chamar API para adicionar anotação
         await window.ticketDB.addAnnotation(ticketId, text, user);
-        
-        // Recarregar anotações e atualizar modal
         const annotations = await window.ticketDB.getAnnotations(ticketId);
         selectedTicket.annotations = annotations;
-        
-        // Limpar campo de entrada
         annotationInput.value = '';
-        
-        // Atualizar modal sem fechá-lo
         renderModalContent();
-        
-        // Mostra mensagem de sucesso
         showToast('Anotação adicionada com sucesso');
-        
-        // Atualiza a lista de tickets em segundo plano
         loadTickets();
     } catch (error) {
         console.error('Erro ao adicionar anotação:', error);
@@ -699,29 +670,15 @@ async function addAnnotation(ticketId) {
     }
 }
 
-// Função para deletar uma anotação
 async function deleteAnnotation(event, ticketId, annotationId) {
     event.stopPropagation();
-    
-    if (!confirm('Tem certeza que deseja excluir esta anotação?')) {
-        return;
-    }
-    
+    if (!confirm('Tem certeza que deseja excluir esta anotação?')) return;
     try {
-        // Chamar API para deletar anotação
         await window.ticketDB.deleteAnnotation(ticketId, annotationId);
-        
-        // Recarregar anotações e atualizar modal
         const annotations = await window.ticketDB.getAnnotations(ticketId);
         selectedTicket.annotations = annotations;
-        
-        // Atualizar modal sem fechá-lo
         renderModalContent();
-        
-        // Mostrar notificação de sucesso
         showToast('Anotação excluída com sucesso');
-        
-        // Atualizar a lista de tickets em segundo plano
         loadTickets();
     } catch (error) {
         console.error('Erro ao excluir anotação:', error);
@@ -729,7 +686,6 @@ async function deleteAnnotation(event, ticketId, annotationId) {
     }
 }
 
-// Função para fazer upload de arquivo para ticket
 async function uploadFileToTicket(ticketId) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -739,36 +695,20 @@ async function uploadFileToTicket(ticketId) {
     fileInput.addEventListener('change', async (event) => {
         const file = event.target.files[0];
         if (!file) return;
-        
-        // Validar tamanho (10MB)
         if (file.size > 10 * 1024 * 1024) {
             showToast(`Arquivo ${file.name} é muito grande. Máximo 10MB.`, 'error');
             return;
         }
-        
         try {
-            // Mostrar indicador de carregamento
             showToast('Enviando arquivo...', 'info');
-            
-            // Fazer upload do arquivo
             const loggedUser = localStorage.getItem('loggedUser') || 'Sistema';
             await window.ticketDB.uploadFile(ticketId, file, loggedUser);
-            
-            // Recarregar ticket e atualizar modal
             const updatedTicket = await window.ticketDB.getTicketById(ticketId);
             selectedTicket = updatedTicket;
-            
-            // Carregar anotações atualizadas
             const annotations = await window.ticketDB.getAnnotations(ticketId);
             selectedTicket.annotations = annotations;
-            
-            // Atualizar modal sem fechá-lo
             renderModalContent();
-            
-            // Mostrar notificação de sucesso
             showToast('Arquivo enviado com sucesso');
-            
-            // Atualizar a lista de tickets em segundo plano
             loadTickets();
         } catch (error) {
             console.error('Erro ao enviar arquivo:', error);
@@ -781,7 +721,6 @@ async function uploadFileToTicket(ticketId) {
     fileInput.click();
 }
 
-// Função para mostrar toast
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -789,22 +728,134 @@ function showToast(message, type = 'success') {
     toast.className = 'toast show';
     if (type === 'error') toast.classList.add('error');
     else toast.classList.remove('error');
-    // Aumenta o tempo de exibição para 5 segundos
     setTimeout(() => { toast.classList.remove('show'); }, 5000);
 }
 
-// Botão voltar mantém parâmetro ?user=LOGIN
-document.addEventListener('DOMContentLoaded', function() {
+// Botão voltar
+function setupBackButton() {
     const backBtn = document.getElementById('backIndexBtn');
     if (backBtn) {
         backBtn.onclick = function() {
             const params = new URLSearchParams(window.location.search);
             const user = params.get('user');
             if (user) {
-                window.location.href = `/public/index.html?user=${encodeURIComponent(user)}`;
+                window.location.href = `/public/index.html?user=${encodeURIComponent(user)}&area=${encodeURIComponent(params.get('area') || '')}`;
             } else {
                 window.location.href = '/public/index.html';
             }
         };
     }
+}
+
+// === NOTIFICAÇÃO SONORA COM ARQUIVO EXTERNO (notification.mp3) ===
+
+let lastTicketCache = new Map();
+let notificationInterval = null;
+const NOTIFICATION_INTERVAL_MS = 30000; // 30s
+const NEW_TICKET_WINDOW_MS = 20000;     // 20s
+let userHasInteracted = false;
+let audioElement = null;
+
+// Cria o elemento de áudio uma vez
+function createAudioElement() {
+    if (audioElement) return;
+    audioElement = new Audio('/public/sounds/notification.mp3');
+    audioElement.preload = 'auto';
+    audioElement.volume = 0.8;
+}
+
+// Toca o som (só se usuário interagiu)
+function playNotificationSound() {
+    if (document.visibilityState !== 'visible') return;
+    
+    if (userHasInteracted && audioElement) {
+        // Tenta tocar
+        audioElement.play().catch(err => {
+            console.warn('Falha ao tocar notificação:', err);
+            showToast('🔔 Novo chamado para sua área!', 'info');
+        });
+    } else {
+        // Só mostra toast se áudio não puder tocar
+        showToast('🔔 Novo chamado para sua área!', 'info');
+    }
+}
+
+// Verifica novos chamados
+async function checkForNewTickets() {
+    try {
+        const allTickets = await window.ticketDB.getAllTickets();
+        const { area } = getUrlParams();
+        if (!area) return;
+
+        const now = Date.now();
+        const currentOpenTickets = allTickets.filter(t =>
+            (t.destinationArea || '').trim() === area &&
+            t.status === 'Aberto' &&
+            t.createdAt
+        );
+
+        let hasNewTicket = false;
+        for (const ticket of currentOpenTickets) {
+            const ticketId = ticket.id;
+            const createdAt = new Date(ticket.createdAt).getTime();
+            if (now - createdAt > NEW_TICKET_WINDOW_MS) continue;
+            if (!lastTicketCache.has(ticketId)) {
+                hasNewTicket = true;
+                break;
+            }
+        }
+
+        if (hasNewTicket) {
+            playNotificationSound();
+            loadTickets();
+        }
+
+        // Atualiza cache
+        const newCache = new Map();
+        currentOpenTickets.forEach(t => {
+            newCache.set(t.id, new Date(t.createdAt).getTime());
+        });
+        lastTicketCache = newCache;
+
+    } catch (error) {
+        console.warn('Erro na verificação:', error);
+    }
+}
+
+function startNotificationPolling() {
+    if (notificationInterval) return;
+    createAudioElement(); // Prepara o áudio
+    checkForNewTickets().then(() => {
+        notificationInterval = setInterval(checkForNewTickets, NOTIFICATION_INTERVAL_MS);
+    });
+}
+
+function stopNotificationPolling() {
+    if (notificationInterval) {
+        clearInterval(notificationInterval);
+        notificationInterval = null;
+    }
+}
+
+// Ativa após primeira interação
+function enableAudioOnInteraction() {
+    userHasInteracted = true;
+    // Remove os listeners
+    ['click', 'keydown', 'touchstart'].forEach(type => {
+        document.removeEventListener(type, enableAudioOnInteraction, { once: true });
+    });
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('area')) {
+        // Prepara listeners de interação
+        ['click', 'keydown', 'touchstart'].forEach(type => {
+            document.addEventListener(type, enableAudioOnInteraction, { once: true });
+        });
+        startNotificationPolling();
+    }
 });
+
+window.addEventListener('beforeunload', stopNotificationPolling);

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
         loginText.style.display = 'none';
         loginLoader.style.display = 'inline-block';
 
-        // Usuário sempre em caixa alta
+      // Usuário sempre em caixa alta
       const username = document.getElementById('username').value.trim().toUpperCase();
         const password = document.getElementById('password').value.trim();
 
@@ -53,10 +53,13 @@ document.addEventListener('DOMContentLoaded', function () {
             loginToast.textContent = 'Login realizado com sucesso!';
             loginToast.style.background = '#28a745';
             loginToast.style.display = 'block';
+
+            // Função para redirecionar após breve atraso URL de index com ?user=LOGIN e ?area=user.area
             setTimeout(function () {
-          console.debug('Redirecionando para /public/index.html?user=' + encodeURIComponent(username));
-          window.location.href = `/public/index.html?user=${encodeURIComponent(username)}`;
+                console.debug('Redirecionando para /public/index.html?user=' + encodeURIComponent(username) + '&area=' + encodeURIComponent(user.area));
+                window.location.href = `/public/index.html?user=${encodeURIComponent(username)}&area=${encodeURIComponent(user.area)}`;
             }, 800);
+
         } catch (err) {
             console.error('Erro ao autenticar:', err);
             // Mostra a mensagem de erro no toast para diagnóstico (curta)

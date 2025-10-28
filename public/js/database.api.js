@@ -61,12 +61,28 @@ class TicketDatabaseAPI {
         return await res.json();
     }
 
+    // Pegar todos os tickets abertos no banco se não tiver nem user nem area   
     async getAllTickets() {
         const res = await fetch(API_URL);
         if (!res.ok) throw new Error('Erro ao buscar tickets');
         return await res.json();
     }
 
+    // Pegar chamados por user na url
+    async getAllTicketsByUser(user) {
+        const res = await fetch(`${API_URL}?user=${encodeURIComponent(user)}`);
+        if (!res.ok) throw new Error('Erro ao buscar tickets por usuário');
+        return await res.json();
+    }
+
+    // Pegar chamados por area na url
+    async getAllTicketsByArea(area) {
+        const res = await fetch(`${API_URL}?area=${encodeURIComponent(area)}`);
+        if (!res.ok) throw new Error('Erro ao buscar tickets por área');
+        return await res.json();
+    }
+
+    // Pegar chamados pela id do ticket
     async getTicketById(id) {
         const res = await fetch(`${API_URL}/${id}`);
         if (!res.ok) throw new Error('Erro ao buscar ticket');

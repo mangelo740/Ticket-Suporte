@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Validar campos obrigatórios
+    // Validar campos obrigatórios
     const firstName = document.getElementById('firstName').value.trim();
     const priority = document.getElementById('priority').value;
     const department = document.getElementById('department').value;
@@ -201,10 +201,10 @@ function showToast(message, type = 'success') {
     
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 6000);
+    }, 2000);
 }
 
-// Preenche selects de departamento com dados da API
+// Preenche selects de departamento com dados da API - AREA DESTINO / ORIGEM
 async function preencherDepartamentos() {
     try {
         const departamentos = await window.ticketDB.getAllDepartments();
@@ -228,15 +228,16 @@ async function preencherDepartamentos() {
 }
 window.addEventListener('DOMContentLoaded', preencherDepartamentos);
 
-// Botão para admin.html mantém parâmetro ?user=LOGIN
+// Botão para admin.html mantém parâmetro ?user=LOGIN e ?area=user.area
 document.addEventListener('DOMContentLoaded', function() {
     const adminBtn = document.getElementById('goAdminBtn');
     if (adminBtn) {
         adminBtn.onclick = function() {
             const params = new URLSearchParams(window.location.search);
             const user = params.get('user');
+            const area = params.get('area');
             if (user) {
-                window.location.href = `/public/admin.html?user=${encodeURIComponent(user)}`;
+                window.location.href = `/public/admin.html?user=${encodeURIComponent(user)}&area=${encodeURIComponent(area)}`;
             } else {
                 window.location.href = '/public/admin.html';
             }
