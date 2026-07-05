@@ -503,7 +503,7 @@ function renderModalContent() {
                 </div>
                 <div>
                     <label>Descrição:</label>
-                    <textarea id="editDescription">${ticket.description}</textarea>
+                    <textarea id="editDescription" style="width: 200px;">${ticket.description}</textarea>
                 </div>
                 <div>
                     <label>Anexos:</label>
